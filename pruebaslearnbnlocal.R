@@ -51,7 +51,6 @@ plot.restrictedgraph(learnt.local, positions, distance )
 plot.restrictedgraph(learnt.local, positions, distance, nodes = 2 )
 
 
-
 ##############
 ##############
 
@@ -66,3 +65,23 @@ plot.graphrestrictions2 <- function(nodes, positions, distance ) {
   text(x = labsx , y = positions[2,  ] , labels = colnames(nodes),  col = c("red", "blue", "green", "yellow", "orange", "pink"))
   points(positions[1 ,  ] ,  positions[2 ,  ],  pch = 1, cex = distance,  col = c("red", "blue", "green", "yellow", "orange", "pink")) 
 }
+
+
+
+##############
+##############
+
+dat <- NCEP_Iberia_tp$Data
+xy <- NCEP_Iberia_tp$xyCoords
+
+
+?as.data.frame
+df.dat <- as.data.frame(dat)
+# comprobaciones 
+locs <- matrix(seq(1,48), ncol = 8)
+obs <- sample(seq(1,1805), 1)
+loc <- sample(seq(1,48), 1)
+locs
+obs
+loc
+dat[obs,1,4] == df.dat[obs, loc]
