@@ -39,5 +39,5 @@ hc.local <- function(x, positions, distance, norm = "2", plotrestrictions = FALS
   if (is.null(blacklist) ) {  blacklist <- matrix(nrow = 0, ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))}
   blacklist <- rbind(blacklist, for.the.blacklist)
   
-  return( hc(x = x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, debug = debug, restart = restart, perturb = perturb, max.iter = max.iter, maxp = maxp, optimized = optimized) )
+  return( hc(x = x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, restart = restart, perturb = perturb, max.iter = max.iter, maxp = maxp, optimized = optimized) )
 }

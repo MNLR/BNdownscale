@@ -23,7 +23,7 @@ dat$Data[dat$Data >= 1] <-  1
 list.tp <- preprocess(dat)
 
 learnt.tp7 <- hc.local(x = list.tp[[1]], positions = list.tp[[2]], distance = 7, plotrestrictions = T)
-plot.restrictedgraph(learnt.tp7, positions = list.tp[[2]], distance = 7, node =10)
+plot.restrictedgraph(learnt.tp7, positions = list.tp[[2]], distance = 7, node =10, dev = TRUE)
 plot.restrictedgraph(learnt.tp7, positions = list.tp[[2]], distance = 7, node =-1) # plots only nodes and arcs , fixed positions
 
 #plot(learnt.tp)
@@ -58,4 +58,24 @@ scoreS
 #[1] -33415.78 -33470.44 -33645.73 -33861.98 -35048.10
 bench/(10^9)
 #[1] 2.9896195 2.5970189 1.6455378 0.8825255 0.1424117 (seg)
+
+
+
+###
+### hc.local vs hc.local2
+###
+
+bench1 <- array(0, 4)
+bench2 <- array(0,  4)
+
+distanceS <- c(10,7,5,2)
+
+for (i in seq(1,4)){
+  bench1[i] <- mean(microbenchmark(hc.local(x = list.tp[[1]], positions =list.tp[[2]], distance = distanceS[i]), times = 50)$time)
+  bench2[i] <- mean(microbenchmark(hc.local2(x = list.tp[[1]], positions =list.tp[[2]], distance = distanceS[i]), times = 50)$time)
+}
+bench1
+#[1] 2593637062 1647512156  856225297  144091632
+bench2
+#[1] 2581355760 1618492574  824999451  112635071  #ligera mejora de unas centesimas
 

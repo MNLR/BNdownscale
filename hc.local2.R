@@ -50,5 +50,5 @@ hc.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FAL
   
   blacklist <- rbind(blacklist, for.the.blacklist)
   
-  return( hc(x = x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, debug = debug, restart = restart, perturb = perturb, max.iter = max.iter, maxp = maxp, optimized = optimized) )
+  return( hc(x = x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, restart = restart, perturb = perturb, max.iter = max.iter, maxp = maxp, optimized = optimized) )
 }
