@@ -1,8 +1,10 @@
-hc.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FALSE, start = NULL, whitelist = NULL, blacklist = NULL, score = NULL, ...,
-                      debug = FALSE, restart = 0, perturb = 1, max.iter = Inf, maxp = Inf, optimized = TRUE ){
+tabu.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FALSE, start = NULL, whitelist = NULL,
+                        blacklist = NULL, score = NULL, ..., debug = FALSE, tabu = 10, max.tabu = tabu, max.iter = Inf, 
+                        maxp = Inf, optimized = TRUE ) {
+ 
   # 
-  # Learns the structure of a Bayesian network using a hill-climbing (HC) algorithm and restricts the search for directed arcs to nodes that are closer than the distance specified generating
-  # a blacklist argument for hc() function. The blacklist can be checked using output learnt.local$learning$blacklist.
+  # Learns the structure of a Bayesian network using a tabu search algorithm algorithm and restricts the search for directed arcs to nodes that are closer than the distance specified generating
+  # a blacklist argument for tabu() function. The blacklist can be checked using output learnt.local$learning$blacklist.
   # 
   #  ---- INPUT:
   # x                 a data frame containing the variables of the model
@@ -28,5 +30,6 @@ hc.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FAL
   
   blacklist <- rbind(blacklist, for.the.blacklist)
   
-  return( hc(x = x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, restart = restart, perturb = perturb, max.iter = max.iter, maxp = maxp, optimized = optimized) )
-}
+  return( tabu(x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, tabu = tabu,
+               max.tabu = max.tabu, max.iter = max.iter, maxp = maxp, optimized = optimized) )
+  }

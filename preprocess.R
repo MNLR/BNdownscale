@@ -4,7 +4,7 @@ preprocess.one <- function(DATA, node.names = NULL) {
     positions <- matrix(t(expand.grid(DATA$xyCoords$y, DATA$xyCoords$x))[2 ,], nrow=1)
     positions <- rbind(positions, t(expand.grid(DATA$xyCoords$y, DATA$xyCoords$x))[1 , ] )
   }
-  else if (class(DATA$xyCoords) == "matrix"){
+  else if (class(DATA$xyCoords) == "matrix" | class(DATA$xyCoords) == "data.frame"){
     positions <- t(DATA$xyCoords)
   }
   else { stop("Incorrect format.") }
@@ -30,7 +30,7 @@ preprocess <- function(observations, global = NULL,  rm.na = TRUE ) {
     if (class(global$xyCoords) == "list"){
       Nvars <- length(global$xyCoords$x)*length(global$xyCoords$y)
     }
-    else if (class(global$xyCoords) == "matrix"){
+    else if (class(global$xyCoords) == "matrix" | class(global$xyCoords) == "data.frame" ){
       Nvars <- NROW(global$xyCoords)
     }
     else { stop("Incorrect format.") }
@@ -40,13 +40,13 @@ preprocess <- function(observations, global = NULL,  rm.na = TRUE ) {
     if (class(observations$xyCoords) == "list"){
       Nvars <- length(observations$xyCoords$x)*length(observations$xyCoords$y)
     }
-    else if (class(observations$xyCoords) == "matrix"){
+    else if (class(observations$xyCoords) == "matrix" | class(observations$xyCoords) == "data.frame"){
       Nvars <- NROW(observations$xyCoords)
     }
     else { stop("Incorrect format.") }
     names <- mapply(paste0, array("D", Nvars) ,seq(1,Nvars))
     observations.p <- preprocess.one(observations, names)
-
+    
     positions <- cbind( global.p[[2]], observations.p[[2]])
     data <- cbind.data.frame(global.p[[1]], observations.p[[1]])
     
