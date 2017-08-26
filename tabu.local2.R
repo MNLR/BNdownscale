@@ -30,6 +30,8 @@ tabu.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = F
   
   blacklist <- rbind(blacklist, for.the.blacklist)
   
+  if (debug == TRUE){ print(blacklist) }
+  
   return( tabu(x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, tabu = tabu,
                max.tabu = max.tabu, max.iter = max.iter, maxp = maxp, optimized = optimized) )
   }
