@@ -1,4 +1,4 @@
-tabu.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FALSE, start = NULL, whitelist = NULL,
+tabu.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL, whitelist = NULL,
                         blacklist = NULL, score = NULL, ..., debug = FALSE, tabu = 10, max.tabu = tabu, max.iter = Inf, 
                         maxp = Inf, optimized = TRUE ) {
  
@@ -22,6 +22,11 @@ tabu.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = F
   
   if (plotrestrictions &  NROW(positions) <= 2 ) {
     plot.graphrestrictions(nodes, positions, distance )
+  }
+  
+  if ( !(is.null(exceptions)) ){
+    names <- names[ -exceptions ]
+    positions <- positions[ , - exceptions]
   }
   
   for.the.blacklist <- build.distanceBlacklist(names, positions, distance, norm)

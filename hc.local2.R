@@ -1,4 +1,4 @@
-hc.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FALSE, start = NULL, whitelist = NULL, blacklist = NULL, score = NULL, ...,
+hc.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL,  whitelist = NULL, blacklist = NULL, score = NULL, ...,
                       debug = FALSE, restart = 0, perturb = 1, max.iter = Inf, maxp = Inf, optimized = TRUE ){
   # 
   # Learns the structure of a Bayesian network using a hill-climbing (HC) algorithm and restricts the search for directed arcs to nodes that are closer than the distance specified generating
@@ -20,6 +20,11 @@ hc.local2 <- function(x, positions, distance, norm = "2", plotrestrictions = FAL
   
   if (plotrestrictions &  NROW(positions) <= 2 ) {
     plot.graphrestrictions(nodes, positions, distance )
+  }
+  
+  if ( !(is.null(exceptions)) ){
+    names <- names[ -exceptions ]
+    positions <- positions[ , - exceptions]
   }
   
   for.the.blacklist <- build.distanceBlacklist(names, positions, distance, norm)

@@ -22,4 +22,8 @@ data[[1]][data[[1]] < 1] <-  0
 data[[1]][data[[1]] >= 1] <-  1
 
 learnt.tp2.5 <- hc.local2(x = data[[1]], positions = data[[2]], distance = 2.5, plotrestrictions = F)
+
+learnt.tp1 <- do.call(hc.local2, list(x = data[[1]], positions = data[[2]], distance = 1, plotrestrictions = F) )
+learnt.tp0.5<- do.call(hc.local2, list(distance = 0.5, plotrestrictions = F, positions = data[[2]], x = data[[1]]) )
+
 plot.restrictedgraph(learnt.tp2.5, positions = data[[2]], distance = 2.5 , node = c(1,2,3,4,5,6,7,8,9,10, 11), dev=TRUE )

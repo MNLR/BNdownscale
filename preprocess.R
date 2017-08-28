@@ -22,14 +22,14 @@ preprocess <- function(observations, global = NULL,  rm.na = TRUE , rm.na.mode =
     if (class(observations$xyCoords) == "matrix" | class(observations$xyCoords) == "data.frame" ){
       auxdata <- preprocess.one(observations, rownames(observations$xyCoords) )
     }
-    else { preprocess.one(observations)  } 
+    else { auxdata <- preprocess.one(observations)  } 
     data <- auxdata[[1]]
     positions <- auxdata[[2]]
   }
   else{
     if (class(global$xyCoords) == "list"){
       Nvars <- length(global$xyCoords$x)*length(global$xyCoords$y)
-      names <- mapply(paste0, array("D", Nvars) ,seq(1,Nvars))
+      names <- mapply(paste0, array("G", Nvars) ,seq(1,Nvars))
     }
     else if (class(global$xyCoords) == "matrix" | class(global$xyCoords) == "data.frame" ){
       Nvars <- NROW(global$xyCoords)
