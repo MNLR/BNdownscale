@@ -22,8 +22,6 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
     global.data <- matrix(as.factor(predict(clusterS)), ncol = 1)
     print("Clustering done.")
     
-    print(global.data)
-
     # It does not make sense for the first node (the only global) to have any restriction  if local learning is used
     if ( !(identical( bnlearning.algorithm ,hc) & !(identical( bnlearning.algorithm ,tabu) ) )){
       if ( !( is.null(bnlearning.args.list$exceptions) ) ){
@@ -40,10 +38,8 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
     
     global.data <- sapply(clusterS, predict) # matrix of data where each column is a node with its "climate value" per observation
     print("Clustering done.")
-    print(global.data)
     global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
-    print(global.data)
-    
+
     if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
       xyCoords <- global$xyCoords
     }
@@ -77,13 +73,17 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   if (!(identical(  bnlearning.algorithm  ,hc))){
     bnlearning.args.list[["positions"]] <- data[[2]]
   }
-  print(bnlearning.args.list)
+  
+  data[[1]][] <- lapply( data[[1]], as.factor) 
+  #col_names <- names(df)
   
   print("Building Bayesian Network...")
   bn <- do.call(bnlearning.algorithm, bnlearning.args.list)
-  print("Done.")
+  bn.fit <- bn.fit(bn, data = data[[1]])
   
-  return( list(BN = bn, positions = data[[2]], clusterS = clusterS, mode = mode) ) 
+  print("Done.")
+
+  return( list(BN = bn, positions = data[[2]], BN.fit = bn.fit, clusterS = clusterS, mode = mode) ) 
 }
 
 

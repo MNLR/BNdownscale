@@ -1,5 +1,6 @@
 library(R.VALUE)
 library(bnlearn)
+library(gRain)
 library(igraph)
 library(shape)
 library(flexclust)
@@ -68,6 +69,11 @@ MMDBN.m1.d25.k12 <- build.downscalingBN(local, globalMM , mode = 1, bnlearning.a
                                        bnlearning.args.list = list(distance =2.5) )
 plot.restrictedgraph( MMDBN.m1.d25.k12$BN , MMDBN.m1.d25.k12$positions, distance = 2.5 , 2, dev = TRUE)
 
+
+
+#
+
+
 # prediction test
 #####  
 #####   downscale.BN is a WIP
@@ -75,6 +81,18 @@ test <- list(subsetGrid(q850.germany, years = 1990),
              subsetGrid(t850.germany, years = 1990),
              subsetGrid(z850.germany, years = 1990))
 
-downscale.BN(DBN.m2.d3.k12 , test )
+DBN.m3.d3.k4 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
+                                     clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
+                                     bnlearning.args.list = list(distance =3) )
+DBN.m3.d3.k4$BN.fit$D.4882
+
+
+DBN.m3.d3.k2 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
+                                    clustering.args.list = list(k = 2, family = kccaFamily("kmeans") ), 
+                                    bnlearning.args.list = list(distance =3) )
+
+DBN.m3.d3.k2$BN.fit$D.4882
+
+a <- downscale.BN(DBN.m3.d3.k2 , test )
 downscale.BN(DBN.m1.d2.k12 , test )
 downscale.BN(DBN.m3.d3.k12 , test )
