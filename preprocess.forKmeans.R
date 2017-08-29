@@ -1,11 +1,18 @@
 preprocess.forKmeans <- function(dataset, mode){
-  # Debe colocar cada observacion en una fila, si hay 8 nodos globales y 4 variables por nodo debe crear una matriz 
-  # cuyas variables sean Nodo1.Var1, Nodo1.Var2, ... , Nodo8.Var4
-  
-  preprocess.list <- lapply( dataset, preprocess, rm.na = FALSE )
-  variables.list <- lapply(preprocess.list, function(x) x[[1]])
-  # positions.list <- lapply(preprocess.list, function(x) x[[2]])
-  
+
+  if ( !(is.null(attr(dataset$Data, "dimensions"))) ){
+    if (attr(dataset$Data, "dimensions")[1] == "var"){ # Multigrid
+      variables.list <- apply(dataset$Data, 1 , function(x) as.data.frame(x) )    
+    }
+    else{  # one dataset
+      variables.list <- list(as.data.frame( dataset$Data )) 
+    }
+  }
+  else {  #list of datasets
+    preprocess.list <- lapply( dataset, preprocess, rm.na = FALSE )
+    variables.list <- lapply(preprocess.list, function(x) x[[1]])
+  }
+
   if (mode == 1 | mode == 2){
     Nnodes <- NCOL(variables.list[[1]])
     
@@ -22,9 +29,4 @@ preprocess.forKmeans <- function(dataset, mode){
     nodesAndvars <- do.call( cbind.data.frame ,  variables.list )
     return( nodesAndvars )
  }
-  
 }
-
-#dataset <- list(q850.germany, t850.germany, z850.germany)
-#q850.germany$Data[100,2,5] #[1] 0.00196711
-#node.list[[26]]$V1[100]

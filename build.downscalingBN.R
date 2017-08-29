@@ -1,10 +1,9 @@
 build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, 
                               clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() ) {
-  # global   predictors, expects a list of predictors even if there is only one predictor
-  #              It  is asumed that the data is consistent, only the positions of first element will be used.
+  # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
+  #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              2 coordinate postions are expected. 
   #              NaNs are not expected. POR COMPROBAR QUE PASA CON EL CLUSTERING
-  #              ADAPTAR A makeMultiGrid()
   # local    predictands
   #              NaNs will be processed
   # mode     1: Clustering will be performed for each global (predictor) node separately
@@ -26,7 +25,7 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
     print(global.data)
 
     # It does not make sense for the first node (the only global) to have any restriction  if local learning is used
-    if (!(identical( bnlearning.algorithm ,hc))){
+    if ( !(identical( bnlearning.algorithm ,hc) & !(identical( bnlearning.algorithm ,tabu) ) )){
       if ( !( is.null(bnlearning.args.list$exceptions) ) ){
         bnlearning.args.list$exceptions <- c(bnlearning.args.list$exceptions,  1 )
       }
@@ -45,7 +44,12 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
     global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
     print(global.data)
     
-    xyCoords <- global[[1]]$xyCoords
+    if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
+      xyCoords <- global$xyCoords
+    }
+    else{
+      xyCoords <- global[[1]]$xyCoords
+    }
   }
   else {stop("Invalid mode.")}
   
