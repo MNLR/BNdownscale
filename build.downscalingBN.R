@@ -1,5 +1,5 @@
 build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, 
-                              clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() ) {
+                              clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() , param.learning.method = "bayes") {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              2 coordinate postions are expected. 
@@ -75,15 +75,17 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   }
   
   data[[1]][] <- lapply( data[[1]], as.factor) 
-  #col_names <- names(df)
-  
+
   print("Building Bayesian Network...")
   bn <- do.call(bnlearning.algorithm, bnlearning.args.list)
-  bn.fit <- bn.fit(bn, data = data[[1]])
-  
+  bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method )
   print("Done.")
 
-  return( list(BN = bn, positions = data[[2]], BN.fit = bn.fit, clusterS = clusterS, mode = mode) ) 
+  return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, clusterS = clusterS, mode = mode, 
+               bnlearning.algorithm = bnlearning.algorithm,
+               clustering.args.list = clustering.args.list,
+               bnlearning.args.list = bnlearning.args.list,
+               param.learning.method = param.learning.method) ) 
 }
 
 

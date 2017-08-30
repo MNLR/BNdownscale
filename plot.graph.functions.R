@@ -25,7 +25,7 @@ plot.graphrestrictions <- function(nodes, positions, distance ) {
 }
 
 
-plot.restrictedgraph <- function(graph, positions, distance = -1, nodes = 0, edge.arrow.size = 0.15 ,dev = FALSE) {
+plot.restrictedgraph <- function(bn, positions, distance = -1, nodes = -1, node.size = 4,   edge.arrow.size = 0.15 ,dev = FALSE) {
   # Plots the graph of class bn with nodes in positions and shows the nodes dependance distance as a circle, for a given distance d assumed to be euclidean distance. 
   #  ---- INPUT:
   # graph             An object of class bn whose Directed Acyclic Graph is going to be plotted.
@@ -37,7 +37,7 @@ plot.restrictedgraph <- function(graph, positions, distance = -1, nodes = 0, edg
   if (dev) {  dev.new()  }
   else { plot.new() }
   
-  nodes_ <- names(graph$nodes)
+  nodes_ <- names(bn$nodes)
   if (NROW(positions) == 1){
     positions <- rbind(positions, 0)
     minx <- min(positions)
@@ -52,22 +52,32 @@ plot.restrictedgraph <- function(graph, positions, distance = -1, nodes = 0, edg
     maxy <- max(positions[2 ,  ])
   }
   
+  Nnodes <- length(bn$nodes)
+  
+  
   NodeList <- data.frame(nodes_, positions[1, ] , positions[2, ])
-  EdgeList <- data.frame(graph$arcs)
+  EdgeList <- data.frame(bn$arcs)
   a <- graph_from_data_frame(vertices = NodeList, d = EdgeList)
   color <- c("red", "blue", "green", "yellow", "brown", "black", "pink", "cyan")
+  color <- array( color, Nnodes)
   
-  if (length(nodes) == 1 && nodes == 0) { cpositions <- positions}
-  else {  
-    cpositions <- as.matrix(positions[ ,nodes] ) 
-    color <- array( color, max(nodes))
-    }
+  if (length(nodes) == 1 && nodes == 0){
+    nodes <- seq(1, Nnodes)
+  }
+  if ( (length(nodes) == 1 && nodes != -1) | (length(nodes) != 1) ) { 
+    cpositions <- as.matrix(positions[ ,nodes] )
+  }
   
-  plot.igraph(a, layout=t(positions), vertex.size=4, vertex.color=color,  rescale=F,  xlim=c(minx, maxx), ylim=c(miny, maxy), asp=FALSE , axes = TRUE , edge.arrow.size = edge.arrow.size)
+  plot.igraph(a, layout=t(positions), vertex.size = node.size, vertex.color=color,  rescale=F,  xlim=c(minx, maxx), ylim=c(miny, maxy), asp=FALSE , axes = TRUE , edge.arrow.size = edge.arrow.size)
   if ( (length(nodes) == 1 && (nodes != -1 & distance != -1) ) | ( length(nodes) != 1 & distance != -1 )  ) {
     trash <- mapply(plotellipse, mid = split(cpositions, rep(1:ncol(cpositions), each = nrow(cpositions))), lcol = color[nodes] , MoreArgs = list( rx = distance, ry = distance, asp = FALSE))
   }
   
+}
+
+plot.DBN <- function(DBN, nodes = -1, node.size = 4, edge.arrow.size = 0.15, dev = FALSE ){
+  plot.restrictedgraph( bn = DBN$BN , positions = DBN$positions, distance = DBN$bnlearning.args.list$distance, 
+                        nodes = nodes, node.size = node.size, edge.arrow.size = edge.arrow.size , dev = dev)
 }
 
 

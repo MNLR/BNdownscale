@@ -5,6 +5,7 @@ library(igraph)
 library(shape)
 library(flexclust)
 library(transformeR)
+library(parallel)
 source("build.downscalingBN.R")
 source("preprocess.R")
 source("preprocess.forKmeans.R")
@@ -14,6 +15,9 @@ source("learning.complement2.R")
 source("plot.graph.functions.R")
 source("downscale.BN.R")
 
+####
+####   DATA 
+####
 
 load("data/era_interim/predictors_germany.Rdata")
 
@@ -25,32 +29,25 @@ local <- loadValueStations(dataset = obs.dataset, var = "precip")
 local$Data[ local$Data < 1] <-  0
 local$Data[ local$Data >= 1] <-  1
 
+
+####
+####
+####
 # Test for the 3 modes
 DBN.m3.d3.k12 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
                     clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                     bnlearning.args.list = list(distance =3) )
 
-plot.restrictedgraph(DBN.m3.d3.k12$BN, DBN.m3.d3.k12$positions, distance = 3 , node = c(2), dev=TRUE )
-
-
 DBN.m1.d2.k12 <- build.downscalingBN(local, global , mode = 1, bnlearning.algorithm = hc.local2, 
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            bnlearning.args.list = list(distance =2) )
 
-plot.restrictedgraph(DBN.m1.d2.k12$BN, DBN.m1.d2.k12$positions, distance = 2 , node = c(2), dev=TRUE )
-
-DBN.m2.d2.k12 <- build.downscalingBN(local, global , mode = 2, bnlearning.algorithm = hc.local2, 
-                                     clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                                     bnlearning.args.list = list(distance =2) )
-
-plot.restrictedgraph( DBN.m2.d2.k12$BN , DBN.m2.d2.k12$positions, distance = 2 , node = c(2), dev=TRUE )
-
-
 DBN.m2.d3.k12 <- build.downscalingBN(local, global , mode = 2, bnlearning.algorithm = hc.local2, 
                                      clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                                     bnlearning.args.list = list(distance =3) )
+                                     bnlearning.args.list = list(distance =3) ,
+                                     param.learning.method = "bayes")
 
-plot.restrictedgraph( DBN.m2.d2.k12$BN , DBN.m2.d3.k12$positions, distance = 3 , node = seq(1,48,10), dev=TRUE )
+plot.DBN( DBN.m2.d3.k12, dev=TRUE , nodes = c(8, 17))
 
 # Using MultiGridS
 
@@ -71,28 +68,44 @@ plot.restrictedgraph( MMDBN.m1.d25.k12$BN , MMDBN.m1.d25.k12$positions, distance
 
 
 
-#
-
-
-# prediction test
-#####  
-#####   downscale.BN is a WIP
-test <- list(subsetGrid(q850.germany, years = 1990), 
-             subsetGrid(t850.germany, years = 1990),
-             subsetGrid(z850.germany, years = 1990))
-
-DBN.m3.d3.k4 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
-                                     clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
-                                     bnlearning.args.list = list(distance =3) )
-DBN.m3.d3.k4$BN.fit$D.4882
-
+# Tests
 
 DBN.m3.d3.k2 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
                                     clustering.args.list = list(k = 2, family = kccaFamily("kmeans") ), 
-                                    bnlearning.args.list = list(distance =3) )
-
+                                    bnlearning.args.list = list(distance =3) , param.learning.method = "mle")
 DBN.m3.d3.k2$BN.fit$D.4882
 
-a <- downscale.BN(DBN.m3.d3.k2 , test )
-downscale.BN(DBN.m1.d2.k12 , test )
-downscale.BN(DBN.m3.d3.k12 , test )
+DBN.m3.d3.k4 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
+                                     clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
+                                     bnlearning.args.list = list(distance =3) , param.learning.method = "bayes")
+DBN.m3.d3.k4$BN.fit$D.4882
+
+# prediction test
+#####  
+
+#test <- list(subsetGrid(q850.germany, years = 1990), subsetGrid(t850.germany, years = 1990), subsetGrid(z850.germany, years = 1990))
+MMtest <- subsetGrid(globalMM, years = 1990, season = c(1) )
+
+# Testing compatibility...
+# this BN was built using global as list:
+DBN.m1.d2.k4 <- build.downscalingBN(local, global , mode = 1, bnlearning.algorithm = hc.local2, 
+                                    clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
+                                    bnlearning.args.list = list(distance = 2) , param.learning.method = "bayes")
+# predictors are given as a Multigrid:
+d.bn<- downscale.BN(DBN.m1.d2.k4 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) 
+
+# testing predictions...
+DBN.m3.d2.k12 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
+                                    clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
+                                    bnlearning.args.list = list(distance = 2) , param.learning.method = "bayes")
+
+d.bn<- downscale.BN(DBN.m3.d2.k12 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) 
+
+# time
+system.time( d.bn<- downscale.BN(DBN.m1.d2.k4 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) )
+#user  system elapsed 
+#9.78   32.79  163.28 
+system.time(  d.bn<- downscale.BN(DBN.m1.d2.k4 , MMtest ) )
+#   user  system elapsed 
+#267.44   27.68  297.12 
+
