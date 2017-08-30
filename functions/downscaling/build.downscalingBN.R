@@ -1,3 +1,5 @@
+source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
+
 build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, 
                               clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() , param.learning.method = "bayes") {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset

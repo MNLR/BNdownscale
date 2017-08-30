@@ -1,3 +1,5 @@
+source("functions/local.bnlearning/aux_functions/build.distanceBlacklist.R")
+
 hc.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL,  whitelist = NULL, blacklist = NULL, score = NULL, ...,
                       debug = FALSE, restart = 0, perturb = 1, max.iter = Inf, maxp = Inf, optimized = TRUE ){
   # 

@@ -1,3 +1,4 @@
+source("functions/generalaux/preprocess.R")
 preprocess.forKmeans <- function(dataset, mode){
 
   if ( !(is.null(attr(dataset$Data, "dimensions"))) ){

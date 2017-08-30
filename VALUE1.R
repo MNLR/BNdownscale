@@ -6,14 +6,12 @@ library(shape)
 library(flexclust)
 library(transformeR)
 library(parallel)
-source("build.downscalingBN.R")
-source("preprocess.R")
-source("preprocess.forKmeans.R")
-source("hc.local2.R")
-source("build.distanceBlacklist.R")
-source("learning.complement2.R")
-source("plot.graph.functions.R")
-source("downscale.BN.R")
+
+source("functions/downscaling/build.downscalingBN.R")
+source("functions/downscaling/downscale.BN.R")
+source("functions/local.bnlearning/hc.local2.R")
+source("functions/local.bnlearning/tabu.local2.R")
+source("functions/plot.graph.functions/plot.DBN.R")
 
 ####
 ####   DATA 
@@ -54,17 +52,17 @@ plot.DBN( DBN.m2.d3.k12, dev=TRUE , nodes = c(8, 17))
 MMDBN.m3.d3.k12 <- build.downscalingBN(local, globalMM , mode = 3, bnlearning.algorithm = hc.local2, 
                                      clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                                      bnlearning.args.list = list(distance =3) )
-plot.restrictedgraph( MMDBN.m3.d3.k12$BN , MMDBN.m3.d3.k12$positions, distance = 3 , 2, dev = TRUE)
 
 MMDBN.m2.d2.k12 <- build.downscalingBN(local, globalMM , mode = 2, bnlearning.algorithm = hc.local2, 
                                        clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                                        bnlearning.args.list = list(distance =2) )
-plot.restrictedgraph( MMDBN.m2.d2.k12$BN , MMDBN.m2.d2.k12$positions, distance = 2 , 2, dev = TRUE)
 
 MMDBN.m1.d25.k12 <- build.downscalingBN(local, globalMM , mode = 1, bnlearning.algorithm = hc.local2, 
                                        clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                                        bnlearning.args.list = list(distance =2.5) )
-plot.restrictedgraph( MMDBN.m1.d25.k12$BN , MMDBN.m1.d25.k12$positions, distance = 2.5 , 2, dev = TRUE)
+plot.DBN( MMDBN.m3.d3.k12, dev=TRUE , nodes = c(8, 17))
+plot.DBN( MMDBN.m2.d2.k12, dev=TRUE , nodes = c(8, 17))
+plot.DBN( MMDBN.m1.d25.k12, dev=TRUE , nodes = c(8, 17))
 
 
 

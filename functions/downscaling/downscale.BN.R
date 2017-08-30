@@ -1,3 +1,4 @@
+source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = FALSE, n.cores = NULL , cluster.type = "PSOCK"){
 
   # Parallelize = TRUE should help a lot when lots of evidences are provided.

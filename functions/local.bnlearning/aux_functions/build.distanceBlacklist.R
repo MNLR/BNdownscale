@@ -1,3 +1,5 @@
+source("functions/local.bnlearning/aux_functions/learning.complement2.R")
+
 build.distanceBlacklist <- function(names, positions, distance, norm = "2") {
   
   names.list <- list()

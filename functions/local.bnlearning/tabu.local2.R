@@ -1,3 +1,5 @@
+source("functions/local.bnlearning/aux_functions/build.distanceBlacklist.R")
+
 tabu.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL, whitelist = NULL,
                         blacklist = NULL, score = NULL, ..., debug = FALSE, tabu = 10, max.tabu = tabu, max.iter = Inf, 
                         maxp = Inf, optimized = TRUE ) {
