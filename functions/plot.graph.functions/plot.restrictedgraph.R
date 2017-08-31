@@ -1,4 +1,4 @@
-plot.restrictedgraph <- function(bn, positions, distance = -1, nodes = -1, node.size = 4,   edge.arrow.size = 0.15 ,dev = FALSE) {
+plot.restrictedgraph <- function(bn, positions, distance = NULL, nodes = -1, node.size = 4,   edge.arrow.size = 0.15 ,dev = FALSE) {
   # Plots the graph of class bn with nodes in positions and shows the nodes dependance distance as a circle, for a given distance d assumed to be euclidean distance. 
   #  ---- INPUT:
   # graph             An object of class bn whose Directed Acyclic Graph is going to be plotted.
@@ -42,7 +42,7 @@ plot.restrictedgraph <- function(bn, positions, distance = -1, nodes = -1, node.
   }
   
   plot.igraph(a, layout=t(positions), vertex.size = node.size, vertex.color=color,  rescale=F,  xlim=c(minx, maxx), ylim=c(miny, maxy), asp=FALSE , axes = TRUE , edge.arrow.size = edge.arrow.size)
-  if ( (length(nodes) == 1 && (nodes != -1 & distance != -1) ) | ( length(nodes) != 1 & distance != -1 )  ) {
+  if ( (length(nodes) == 1 && (nodes != -1 & !(is.null(distance))) ) | ( length(nodes) != 1 & !(is.null(distance)) )  ) {
     trash <- mapply(plotellipse, mid = split(cpositions, rep(1:ncol(cpositions), each = nrow(cpositions))), lcol = color[nodes] , MoreArgs = list( rx = distance, ry = distance, asp = FALSE))
   }
 }

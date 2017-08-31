@@ -44,8 +44,11 @@ DBN.m2.d3.k12 <- build.downscalingBN(local, global , mode = 2, bnlearning.algori
                                      clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                                      bnlearning.args.list = list(distance =3) ,
                                      param.learning.method = "bayes")
-
 plot.DBN( DBN.m2.d3.k12, dev=TRUE , nodes = c(8, 17))
+
+DBN.m3.dINF.k12 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc, 
+                                     clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ) )
+plot.DBN( DBN.m3.dINF.k12, dev=TRUE )
 
 # Using MultiGridS
 
@@ -93,11 +96,15 @@ DBN.m1.d2.k4 <- build.downscalingBN(local, global , mode = 1, bnlearning.algorit
 d.bn<- downscale.BN(DBN.m1.d2.k4 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) 
 
 # testing predictions...
-DBN.m3.d2.k12 <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
+DBN.m3.d2.k12.B <- build.downscalingBN(local, global , mode = 3, bnlearning.algorithm = hc.local2, 
                                     clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                                     bnlearning.args.list = list(distance = 2) , param.learning.method = "bayes")
 
-d.bn<- downscale.BN(DBN.m3.d2.k12 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) 
+d.bn<- downscale.BN(DBN.m3.d2.k12.B , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) 
+colnames(d.bn[1, ,])[1]
+
+real <- subsetGrid(local, years = 1990, season = c(1) )
+real$Data
 
 # time
 system.time( d.bn<- downscale.BN(DBN.m1.d2.k4 , MMtest , parallelize = TRUE , as.matrix = TRUE,  n.cores = 4) )
