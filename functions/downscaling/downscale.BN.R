@@ -13,10 +13,11 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
   Nglobal <- length(clusterS)
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
+  scale.args <- downscale.BN$scale.args
 
   junction <- compile( as.grain(BN.fit) )
-  
-  p.global <- preprocess.forKmeans(global, mode)
+
+  p.global <- preprocess.forKmeans(global, mode, scale.args = scale.args )
   
   if ( parallelize == TRUE) {
     if ( is.null(n.cores) ){
@@ -33,8 +34,6 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
       if (cluster.type == "PSOCK") {
         clusterExport(cl, "clustered" , envir = environment() )
       }
-      print(clustered)
-      print(length(clustered))
       PT <- parLapply(cl , clustered, fun =  predict.DBN , predictors = predictors, junction = junction , predictands = predictands )
     }
     else if (mode == 1 | mode == 2){
@@ -62,7 +61,8 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
                   junction = junction , predictands = predictands )
     }
   }
-  if (as.matrix == TRUE){
+
+    if (as.matrix == TRUE){
     return( aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2)) )
   }
   else{ return(PT) }

@@ -1,6 +1,6 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 
-build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, 
+build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, output.marginals = TRUE,
                               clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() , param.learning.method = "bayes") {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
@@ -14,8 +14,12 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   #          3: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
   #               in a single node which will be represented above the grid.
   # bnlearning.algorithm    hc, hc.local2, tabu, tabu.local2. Check their corresponding parameters.
+  # output.marginals        UNUSED
+
   
   p.global <- preprocess.forKmeans(global, mode)
+  if (mode == 3){ clustering.attributes <- list(attributes(p.global)$`scaled:center`, attributes(p.global)$`scaled:scale`) }
+  else { clustering.attributes <- lapply(p.global, function(node) return(list(attributes(node)$`scaled:center`, attributes(node)$`scaled:scale`) ) )}
   
   if (mode == 3) {
     clustering.input <- append( list( x = p.global), clustering.args.list )
@@ -51,7 +55,7 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   }
   else {stop("Invalid mode.")}
   
-  data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords)  )
+  data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
 
   if (mode == 3) {     # The global node is positioned:
     data[[2]][ 1 , 1 ] <- mean( data[[2]][ 1 , -1 ] )
@@ -83,7 +87,18 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method )
   print("Done.")
 
-  return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, clusterS = clusterS, mode = mode, 
+  if (output.marginals){
+    print("Building Marginal Distributions...")
+    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, clusterS = clusterS) )
+    print("Done.")
+  }
+  else {marginals_ <- NULL}
+  
+  return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, 
+               clusterS = clusterS, 
+               scale.args = clustering.attributes, 
+               mode = mode, 
+               marginals = marginals_,
                bnlearning.algorithm = bnlearning.algorithm,
                clustering.args.list = clustering.args.list,
                bnlearning.args.list = bnlearning.args.list,
