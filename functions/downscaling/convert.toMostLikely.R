@@ -20,7 +20,6 @@ is.mostLikely <- function(Probability.Table, event, threshold.vector) {
 }
 
 is.mostLikelyEvent  <- function(Probability.Table, event, threshold.vector) {
-  print(Probability.Table)
   return(as.numeric(Probability.Table[event , ] > threshold.vector))
 }
 

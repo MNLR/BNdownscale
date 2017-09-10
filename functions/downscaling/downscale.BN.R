@@ -51,7 +51,7 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
     if (mode == 3) {
       clustered <- as.factor( predict(clusterS, newdata = p.global) )
       #global.evidence <- setEvidence(junction, nodes = predictors, states = clustered[1])
-      PT <- lapply(clustered, FUN = predict.DBN , predictors = predictors, junction = junction , predictands = predictands )
+      PT <- lapply(clustered, FUN = predict.DBN , predictors = predictors, junction = junction, predictands = predictands )
     }
     else if (mode == 1 | mode == 2){
       clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation

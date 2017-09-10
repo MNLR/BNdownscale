@@ -1,0 +1,20 @@
+library(R.VALUE)
+library(bnlearn)
+library(gRain)
+library(igraph)
+library(shape)
+library(flexclust)
+library(transformeR)
+library(parallel)
+
+source("functions/downscaling/build.downscalingBN.R")
+source("functions/downscaling/downscale.BN.R")
+source("functions/local.bnlearning/hc.local2.R")
+source("functions/local.bnlearning/tabu.local2.R")
+source("functions/plot.graph.functions/plot.DBN.R")
+
+local <- loadValueStations(dataset = "data/VALUE_ERA_INTERIM075_53_Germany_v1.zip", var = "precip"  )
+local2 <- loadValueStations(dataset = "data/VALUE_RACMO011_53_Germany_v1.zip", var = "precip"  )
+
+obs.dataset <- file.path(find.package("R.VALUE"), "example_datasets", "VALUE_53_ECAD_Germany_v1.zip")
+local3 <- loadValueStations(dataset = obs.dataset, var = "precip"  )

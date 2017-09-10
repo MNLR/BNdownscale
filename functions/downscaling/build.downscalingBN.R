@@ -1,7 +1,12 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
+source("functions/downscaling/aux_functions/kmeanspp.R")
 
-build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm = hc, output.marginals = TRUE,
-                              clustering.args.list = list(k = 100, family = kccaFamily("kmeans")), bnlearning.args.list = list() , param.learning.method = "bayes") {
+build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = hc,
+                                parallelize = FALSE, n.cores= NULL, cluster.type = "PSOCK",
+                                output.marginals = TRUE,
+                                clustering.args.list = list(k = 12, family = kccaFamily("kmeans")),
+                                bnlearning.args.list = list(),
+                                param.learning.method = "bayes") {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              2 coordinate postions are expected. 
@@ -13,17 +18,16 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   #               the global will not be allowed
   #          3: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
   #               in a single node which will be represented above the grid.
-  # bnlearning.algorithm    hc, hc.local2, tabu, tabu.local2. Check their corresponding parameters.
-  # output.marginals        UNUSED
-
+  # bnlearning.algorithm    Supports all the functions from bnlearn and hc.local2, tabu.local2. Check their corresponding parameters.
+  # output.marginals        Compute and output Marginal Probability distribution Tables.
   
   p.global <- preprocess.forKmeans(global, mode)
   if (mode == 3){ clustering.attributes <- list(attributes(p.global)$`scaled:center`, attributes(p.global)$`scaled:scale`) }
   else { clustering.attributes <- lapply(p.global, function(node) return(list(attributes(node)$`scaled:center`, attributes(node)$`scaled:scale`) ) )}
-  
+
+  print("Performing clustering...")
   if (mode == 3) {
     clustering.input <- append( list( x = p.global), clustering.args.list )
-    print("Performing clustering...")
     clusterS <- do.call( kcca , clustering.input )
     global.data <- matrix(as.factor(predict(clusterS)), ncol = 1)
     print("Clustering done.")
@@ -39,13 +43,28 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
     rownames(xyCoords) <- "Atmosphere"
   }
   else if (mode == 1 | mode == 2){
-    print("Performing clustering...")
-    clusterS <- mapply(kcca, p.global, MoreArgs =   clustering.args.list, SIMPLIFY = FALSE)
-    
-    global.data <- sapply(clusterS, predict) # matrix of data where each column is a node with its "climate value" per observation
-    print("Clustering done.")
-    global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
+    if ( parallelize ) {
+      if ( is.null(n.cores) ){
+        n.cores <- floor(detectCores()/2)
+      }
+      # Initiate cluster
+      cl <- makeCluster(n.cores, type = cluster.type )
+      if (cluster.type == "PSOCK") {
+        clusterExport(cl, list("kcca") , envir = environment())
+        clusterExport(cl, list( "p.global", "clustering.args.list" ) , envir = environment() )
+      }
+      clusterS <- parLapply(cl, p.global, function(node, cal) return( do.call(kcca, append( list( x = node), cal ) ) ), cal = clustering.args.list)
+      stopCluster(cl)
+    }
+    else {
+      #clusterS1 <- mapply(kcca, p.global, MoreArgs =   clustering.args.list, SIMPLIFY = FALSE)   #### equivalent to:
+      clusterS <- lapply(p.global, function(node, cal) return( do.call(kcca, append( list( x = node), cal ) ) ), cal = clustering.args.list)
+    }
 
+    global.data <- sapply(clusterS, predict) # matrix of data where each column is a node with its "climate value" per observation
+    global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
+    print("Done.")
+    
     if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
       xyCoords <- global$xyCoords
     }
@@ -60,7 +79,6 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   if (mode == 3) {     # The global node is positioned:
     data[[2]][ 1 , 1 ] <- mean( data[[2]][ 1 , -1 ] )
     yS <- data[[2]][ 2 , -1 ]
-    
     y <- max( yS  ) + 3*abs( max( yS ) - min( yS ) )
     data[[2]][ 2 , 1 ] <- y
   }
@@ -76,7 +94,7 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
   }
   
   bnlearning.args.list[["x"]] <- data[[1]]
-  if (!(identical(  bnlearning.algorithm  ,hc))){
+  if ( (identical(  bnlearning.algorithm, hc.local2)) | (identical(  bnlearning.algorithm, tabu.local2)) ){
     bnlearning.args.list[["positions"]] <- data[[2]]
   }
   
@@ -102,7 +120,8 @@ build.downscalingBN <- function(local, global , mode = 1, bnlearning.algorithm =
                bnlearning.algorithm = bnlearning.algorithm,
                clustering.args.list = clustering.args.list,
                bnlearning.args.list = bnlearning.args.list,
-               param.learning.method = param.learning.method) ) 
+               param.learning.method = param.learning.method,
+               aux = p.global)    )
 }
 
 

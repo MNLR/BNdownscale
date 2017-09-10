@@ -26,9 +26,7 @@ preprocess.forKmeans <- function(dataset, mode, scale.args = NULL){
     else { node.list <- mapply(function(node, scale.args_) return(scale(node, center =  scale.args_[[1]], scale = scale.args_[[2]])), 
                                node.list, scale.args , SIMPLIFY = FALSE)  }
     return( node.list )
-  }
-  
-  else {
+  }  else {
     nodesAndvars <- do.call( cbind.data.frame ,  variables.list )
     if (is.null(scale.args)){ nodesAndvars <- scale(nodesAndvars) }
     else {nodesAndvars <- scale(nodesAndvars, center = scale.args[[1]] , scale = scale.args[[2]] ) }
