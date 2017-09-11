@@ -117,7 +117,7 @@ build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = 
 
   if (output.marginals){
     print("Building Marginal Distributions...")
-    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, clusterS = clusterS) )
+    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, clusterS = clusterS, Nglobals = Nglobals) )
     print("Done.")
   }
   else {marginals_ <- NULL}

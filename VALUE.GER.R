@@ -14,6 +14,8 @@ source("functions/local.bnlearning/hc.local2.R")
 source("functions/local.bnlearning/tabu.local2.R")
 source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/aux_functions/c.table.R")
+source("functions/downscaling/marginals.R")
+
 
 ####
 ####   DATA 
