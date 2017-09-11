@@ -10,15 +10,17 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
   BN.fit <- downscale.BN$BN.fit
   clusterS <- downscale.BN$clusterS
   mode <- downscale.BN$mode
-  Nglobal <- length(clusterS)
+  Nglobal <- downscale.BN$Nglobals
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
   scale.args <- downscale.BN$scale.args
 
   junction <- compile( as.grain(BN.fit) )
-
-  p.global <- preprocess.forKmeans(global, mode, scale.args = scale.args )
   
+  if (is.null(clusterS)){ clustered <- as.matrix(preprocess(global)[[1]]) } # data is expected categorized
+  else{
+    p.global <- preprocess.forKmeans(global, mode, scale.args = scale.args )
+  }
   if ( parallelize == TRUE) {
     if ( is.null(n.cores) ){
       n.cores <- floor(detectCores()/2)
@@ -37,7 +39,9 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
       PT <- parLapply(cl , clustered, fun =  predict.DBN , predictors = predictors, junction = junction , predictands = predictands )
     }
     else if (mode == 1 | mode == 2){
+      if (!(is.null(clusterS))){
       clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+      }
       clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
 
       if (cluster.type == "PSOCK") {
@@ -47,25 +51,23 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
     }
     stopCluster(cl)
   }  
-  else{ # Do not paralellize
+  else{ # Do not parallelize
     if (mode == 3) {
       clustered <- as.factor( predict(clusterS, newdata = p.global) )
       #global.evidence <- setEvidence(junction, nodes = predictors, states = clustered[1])
       PT <- lapply(clustered, FUN = predict.DBN , predictors = predictors, junction = junction, predictands = predictands )
     }
     else if (mode == 1 | mode == 2){
-      clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+      if (!(is.null(clusterS))){
+        clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+      }  
       clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
-    
       PT <- apply(clustered, MARGIN = 1 , FUN = predict.DBN , predictors = predictors, 
                   junction = junction , predictands = predictands )
     }
   }
 
-    if (as.matrix == TRUE){
-    return( aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2)) )
-  }
-  else{ return(PT) }
+    if (as.matrix == TRUE){ return( aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2)) ) } else{ return(PT) }
 }
 
 predict.DBN <- function(categorized, predictors, junction, predictands) { 
