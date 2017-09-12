@@ -1,4 +1,4 @@
-c.table <- function(predicted, real, output.ratios = TRUE){
+c.table <- function(predicted, real){
   real <- matrix(as.numeric(real), ncol = NCOL(real) )
   predicted <-matrix(as.numeric(predicted), ncol = NCOL(predicted) )
   ct1 <- table( predicted - 2*real)
@@ -7,14 +7,24 @@ c.table <- function(predicted, real, output.ratios = TRUE){
   CT <- matrix( c(r1,r2 ), ncol = 2, byrow = TRUE)
   colnames(CT) <- c("w0", "w1")
   rownames(CT) <- c("p0", "p1")
-  if (!(output.ratios)){
-    return(CT)
-  }
-  else{
-    return( list(CT = CT, 
-                 FPR = CT[2,1]/(CT[2,1]+CT[1,1]), 
-                 FNR = CT[1,2]/(CT[1,2]+CT[2,2]), 
-                 MSC = (CT[2,1] + CT[1,2])/sum(CT)) 
-          )
-  }
+  CT[is.na(CT)] <- 0
+  
+  return(CT)
+}
+
+c.table.rates <- function(c.table, value ){
+  switch(value,
+         TPR = { return( c.table[2,2]/(c.table[2,2]+c.table[1,2]) ) },
+         FPR = { return( c.table[2,1]/(c.table[2,1]+c.table[1,1]) ) },
+         TNR = { return( c.table[1,1]/(c.table[1,1]+c.table[2,1]) ) },
+         FNR = { return( c.table[1,2]/(c.table[1,2]+c.table[2,2]) ) }, 
+         MSC = { return( (c.table[2,1] + c.table[1,2])/sum(c.table) ) },
+         all = { return( list(TPR = c.table[2,2]/(c.table[2,2]+c.table[1,2]),
+                              FPR = c.table[2,1]/(c.table[2,1]+c.table[1,1]),
+                              TNR = c.table[1,1]/(c.table[1,1]+c.table[2,1]),
+                              FNR = c.table[1,2]/(c.table[1,2]+c.table[2,2]), 
+                              MSC = (c.table[2,1] + c.table[1,2])/sum(c.table) )
+                        )
+                }
+         )
 }
