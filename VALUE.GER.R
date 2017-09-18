@@ -16,6 +16,7 @@ source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/aux_functions/c.table.R")
 source("functions/downscaling/marginals.R")
 source("functions/downscaling/auc.DBN.R")
+source("functions/validation/MI.vs.distance.R")
 
 
 ####
@@ -52,12 +53,12 @@ real <- subsetGrid(local,  years = c(1991,1992) )
 #from <- array("G.Atmosphere", 53)
 #to <-  c("D.3987", "D.47", "D.2760", "D.2761", "D.4297", "D.51", "D.4472", "D.4669", "D.4079", "D.52", "D.4572", "D.4007", "D.3991", "D.4882", "D.4074", "D.4187", "D.4617",  "D.4954", "D.4014", "D.4776", "D.477", "D.55", "D.4499", "D.4710", "D.42", "D.4652", "D.480", "D.4004", "D.4838", "D.812", "D.4637", "D.475", "D.4284", "D.4218", "D.356", "D.4009", "D.4644", "D.4083",   "D.54", "D.4676",  "D.48", "D.4002", "D.488", "D.2006", "D.472", "D.4015", "D.470", "D.468", "D.3994", "D.58", "D.483", "D.49", "D.469")
 
-DBN <- build.downscalingBN(local2, global, mode = 12, bnlearning.algorithm = hc.local2, 
+DBN <- build.downscalingBN(local2, global, mode = 22, bnlearning.algorithm = hc.local2, 
                            ncategories = 10,
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
                            clustering.args.list = list(k = 24, family = kccaFamily("kmeans") ), 
-                           bnlearning.args.list = list(distance = 2),
+                           bnlearning.args.list = list(distance = 10),
                            param.learning.method = "bayes")
 plot.DBN( DBN, dev=TRUE , nodes = c(28))
 score(DBN$BN, DBN$training.data )
@@ -126,6 +127,88 @@ micl <- lm( y ~ x , mic )
 
 points(c[1, ], c[ 2, ], col =  "red")
 abline(micl, col = "red")
+
+
+############################################################################
+#####
+#####
+#####
+#####         STRINGS
+#####
+#####
+############################################################################
+
+DBNstrings <- build.downscalingBN(local, global, mode = 22, bnlearning.algorithm = hc.local2, 
+                           ncategories = 10,
+                           parallelize = TRUE, n.cores = 7,
+                           output.marginals = TRUE, 
+                           clustering.args.list = list(k = 24, family = kccaFamily("kmeans") ), 
+                           bnlearning.args.list = list(distance = 10),
+                           param.learning.method = "bayes")
+plot.DBN( DBNstrings, dev=TRUE , nodes = c(28))
+scoreDBNStrings <- score(DBNstrings$BN, DBNstrings$training.data )
+scoreDBNStrings
+
+downscaledStrings <- downscale.BN(DBNstrings , test , parallelize = TRUE , 
+                                  as.matrix = TRUE,  n.cores = 7) 
+MPT <-DBNstrings$marginals
+P_1 <- MPT["1", ]
+predictionStrings  <- is.mostLikely(downscaledStrings, event = "1", threshold.vector =  1 - P_1)
+
+ratesStrings <- c.table.rates(c.table(predictionStrings, real$Data), "all")
+ratesStrings
+
+
+###  mode 22, ncat 10, d10 AUC 0.751135
+###
+###  
+###
+
+dev.new()
+auc.values.strings <- auc.DBN(downscaled = downscaledStrings, 
+        real = real$Data, event = "1", points = 100,
+        plot.curve = TRUE, return.YI = TRUE)
+abline(h = ratesStrings$TPR, col = "red")
+
+predictionStringsBest  <- is.mostLikely(downscaledStrings, event = "1", threshold.vector = array(auc.values.strings$best.threshold, NCOL(predictionStrings)))
+ratesStringsBest <- c.table.rates(c.table(predictionStringsBest, real$Data), "all")
+ratesStringsBest
+
+###
+###
+###   Mutual Information
+###
+
+a <- MI.vs.distance(local)
+b <- MI.vs.distance(localPRED)
+mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
+mial <- lm( y ~ x , mia )
+mib <- data.frame(y = b[ 2, ], x = b[ 1, ])
+mibl <- lm( y ~ x , mib )
+
+dev.new()
+plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
+points(b[1, ], b[2, ], col = "blue")
+
+abline(mial)
+abline(mibl, col = "blue")
+
+
+# Predictions:
+
+prediction.p <- real
+prediction.p$Data <- predictionStringsBest
+attr(prediction.p$Data, 'dim') <- attributes(real$Data)$dim
+attr(prediction.p$Data, 'dimensions') <- attributes(real$Data)$dimensions
+
+c <- MI.vs.distance(prediction.p)
+mic <- data.frame(y = c[ 2, ], x = c[ 1, ])
+micl <- lm( y ~ x , mic )
+
+points(c[1, ], c[ 2, ], col =  "red")
+abline(micl, col = "red")
+
+
 
 
 ###
