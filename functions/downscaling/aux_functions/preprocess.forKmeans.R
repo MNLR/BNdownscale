@@ -1,5 +1,5 @@
 source("functions/generalaux/preprocess.R")
-preprocess.forKmeans <- function(dataset, mode, scale.args = NULL){
+preprocess.forKmeans <- function(dataset, mode, scale.args = NULL, scale_ = TRUE){
 
   if ( !(is.null(attr(dataset$Data, "dimensions"))) ){
     if (attr(dataset$Data, "dimensions")[1] == "var"){ # Multigrid
@@ -22,14 +22,18 @@ preprocess.forKmeans <- function(dataset, mode, scale.args = NULL){
       var.dataframe <- as.data.frame( sapply(variables.list, function(variable) variable[ ,i]) )
       node.list[[i]] <- var.dataframe
     }
-    if (is.null(scale.args)){ node.list <- lapply(node.list, scale) }
-    else { node.list <- mapply(function(node, scale.args_) return(scale(node, center =  scale.args_[[1]], scale = scale.args_[[2]])), 
+    if (scale_){
+      if (is.null(scale.args)){ node.list <- lapply(node.list, scale) }
+      else { node.list <- mapply(function(node, scale.args_) return(scale(node, center =  scale.args_[[1]], scale = scale.args_[[2]])), 
                                node.list, scale.args , SIMPLIFY = FALSE)  }
+    }
     return( node.list )
   }  else {
     nodesAndvars <- do.call( cbind.data.frame ,  variables.list )
-    if (is.null(scale.args)){ nodesAndvars <- scale(nodesAndvars) }
-    else {nodesAndvars <- scale(nodesAndvars, center = scale.args[[1]] , scale = scale.args[[2]] ) }
+    if (scale_){
+      if (is.null(scale.args)){ nodesAndvars <- scale(nodesAndvars) }
+      else {nodesAndvars <- scale(nodesAndvars, center = scale.args[[1]] , scale = scale.args[[2]] ) }
+    }
     return( nodesAndvars )
  }
 }

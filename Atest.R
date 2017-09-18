@@ -14,17 +14,27 @@ localPRED$Data[ localPRED$Data > 1 ] <-  1
 ####
 
 c.table(localPRED$Data ,local$Data)
+
 ####
 ####
 ####
 
-vole <- miMat.VALUE(local,  season = c("annual"))
+a <- MI.vs.distance(local)
+plot(a[1, ], a[ 2, ])
+
+b <- MI.vs.distance(localPRED)
+points(b[1, ], b[2, ], col = "blue")
+####
+####
+
 
 station.labels <- attr(vole[[1]], "station_names")
 scales.list <- list(x = list(labels = station.labels, rot = 90,
                              at = seq(1,ncol(vole[[1]]),1), cex = .5),
                     y = list(labels = station.labels,
                              at = seq(1,ncol(vole[[1]]),1), cex = .5))
-lattice::levelplot(vole[[5]], ylab = "", xlab = "",
+
+dev.new()
+lattice::levelplot(vole[[1]], ylab = "", xlab = "",
                    main = "Mutual Information Matrix", scales = scales.list)
 

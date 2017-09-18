@@ -1,4 +1,6 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
+source("functions/downscaling/aux_functions/categorize.bn.R")
+
 downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = FALSE, n.cores = NULL , cluster.type = "PSOCK"){
 
   # Parallelize = TRUE should help a lot when lots of evidences are provided.
@@ -9,17 +11,22 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
   BN <- downscale.BN$BN
   BN.fit <- downscale.BN$BN.fit
   clusterS <- downscale.BN$clusterS
-  mode <- downscale.BN$mode
+  mode_ <- downscale.BN$mode
+  mode <- as.numeric(mode_[1])
+  mode2 <- mode_[2]
   Nglobal <- downscale.BN$Nglobals
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
-  scale.args <- downscale.BN$scale.args
+  clustering.attributes <- downscale.BN$clustering.attributes
 
   junction <- compile( as.grain(BN.fit) )
   
-  if (is.null(clusterS)){ clustered <- as.matrix(preprocess(global)[[1]]) } # data is expected categorized
+  if (is.null(clusterS)){
+    if (mode2 == "1"){  clustered <- as.matrix(preprocess(global)[[1]]) } # data is expected categorized
+    else { clustered  <- categorize.bn( global, mode, NULL , clustering.attributes)[[1]] }
+  }
   else{
-    p.global <- preprocess.forKmeans(global, mode, scale.args = scale.args )
+    p.global <- preprocess.forKmeans(global, mode, scale.args = clustering.attributes )
   }
   if ( parallelize == TRUE) {
     if ( is.null(n.cores) ){
@@ -54,7 +61,6 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
   else{ # Do not parallelize
     if (mode == 3) {
       clustered <- as.factor( predict(clusterS, newdata = p.global) )
-      #global.evidence <- setEvidence(junction, nodes = predictors, states = clustered[1])
       PT <- lapply(clustered, FUN = predict.DBN , predictors = predictors, junction = junction, predictands = predictands )
     }
     else if (mode == 1 | mode == 2){

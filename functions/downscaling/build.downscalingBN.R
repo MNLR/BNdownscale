@@ -1,18 +1,20 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 source("functions/downscaling/aux_functions/kmeanspp.R")
+source("functions/downscaling/aux_functions/categorize.bn.R")
 
-build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = hc, 
-                                already.categorical = FALSE,
+build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = hc, 
                                 parallelize = FALSE, n.cores= NULL, cluster.type = "PSOCK",
                                 output.marginals = TRUE,
+                                ncategories = 3,
                                 clustering.args.list = list(k = 12, family = kccaFamily("kmeans")),
                                 bnlearning.args.list = list(),
                                 param.learning.method = "bayes") {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
+  #              Can be categorical or continuous. See mode
   #              2 coordinate postions are expected. 
   #              NaNs are not expected. POR COMPROBAR QUE PASA CON EL CLUSTERING
-  # local    predictands
+  # local    predictands. Expects categorical data. 
   #              NaNs will be processed
   # mode     1: Clustering will be performed for each global (predictor) node separately
   #          2: Clustering will be performed for each global (predictor) node separately. Arcs between nodes from
@@ -22,14 +24,26 @@ build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = 
   # bnlearning.algorithm    Supports all the functions from bnlearn and hc.local2, tabu.local2. Check their corresponding parameters.
   # output.marginals        Compute and output Marginal Probability distribution Tables.
   
-  if ( already.categorical ) {
-    if (mode == 3) {stop("Select mode = 1 or mode = 2 for already categorical data.")}
+  mode_ <- strsplit(as.character(mode), "")[[1]]
+  if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
+  mode <- as.numeric(mode_[1])
+  mode2 <- mode_[2]
+  
+  if ( mode2 == "1" ) {
     data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
     Nglobals <- length(grep("G", colnames(data[[1]])))
     clusterS <- NULL
     clustering.attributes <- NULL 
-  } 
-  else {
+  }
+  else if (mode2 == "2"){
+    gcat <- categorize.bn(global, mode = mode, ncategories = ncategories)
+    global$Data <- gcat[[1]]
+    clustering.attributes <- gcat[[2]] 
+    data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
+    Nglobals <- length(grep("G", colnames(data[[1]])))
+    clusterS <- NULL
+  }
+  else if (mode2 == "0") {
     p.global <- preprocess.forKmeans(global, mode)
     if (mode == 3){ clustering.attributes <- list(attributes(p.global)$`scaled:center`, attributes(p.global)$`scaled:scale`) }
     else { clustering.attributes <- lapply(p.global, function(node) return(list(attributes(node)$`scaled:center`, attributes(node)$`scaled:scale`) ) )}
@@ -81,7 +95,7 @@ build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = 
         xyCoords <- global[[1]]$xyCoords
       }
     }
-    else {stop("Invalid mode.")}
+    else {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
     data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
     Nglobals <- NCOL(global.data)
   }
@@ -124,8 +138,8 @@ build.downscalingBN <- function(local, global, mode = 1, bnlearning.algorithm = 
   
   return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, 
                clusterS = clusterS, 
-               scale.args = clustering.attributes, 
-               mode = mode,
+               clustering.attributes = clustering.attributes, 
+               mode = mode_,
                Nglobals = Nglobals,
                marginals = marginals_,
                bnlearning.algorithm = bnlearning.algorithm,
