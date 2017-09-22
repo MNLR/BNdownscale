@@ -1,4 +1,4 @@
-source("functions/downscaling/aux_functions/c.table.R")
+source("functions/validation/c.table.R")
 
 auc <- function(probabilities, real, event = 1, not.event = 0,  points = 1000, plot.curve = FALSE, return.YI = FALSE ) {
   disc <- seq(from = 0, to = 1, length.out =  points)

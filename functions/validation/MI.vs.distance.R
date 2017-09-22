@@ -6,7 +6,7 @@ MI.vs.distance <- function(stationObj, predictionObj = NULL,
                            aggr.type = c("after", "before"), prob = NULL, threshold = 1,
                            max.na.prop = 0.25) {
   mmat <- miMat.VALUE( stationObj = stationObj, predictionObj = predictionObj,
-                       season = c(season), aggr.type = aggr.type, 
+                       season = season, aggr.type = aggr.type, 
                        prob = prob, threshold = threshold,
                        max.na.prop = max.na.prop )
   

@@ -1,12 +1,14 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 source("functions/downscaling/aux_functions/categorize.bn.R")
+source("functions/downscaling/aux_functions/predict.DBN.R")
 
-downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = FALSE, n.cores = NULL , cluster.type = "PSOCK"){
+downscale.BN <- function(downscale.BN, global, as.matrix = TRUE, parallelize = FALSE, n.cores = NULL , cluster.type = "PSOCK"){
 
   # Parallelize = TRUE should help a lot when lots of evidences are provided.
   # as.matrix = TRUE requires predictand nodes to have the same categories
   # cluster.type   Accepts "PSOCK" and "FORK". "FORK" cannot be used in Windows systems.
-  # as.matrix     Set to TRUE for the output to be converted to a matrix where dimensions are [obs, cat, node]
+  # as.matrix     Set to TRUE for the probabilities output to be converted to a matrix where dimensions are [obs, cat, node]
+  #                 Warning: Beware of the nodes ordering if set to FALSE!
   
   BN <- downscale.BN$BN
   BN.fit <- downscale.BN$BN.fit
@@ -18,7 +20,7 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
   clustering.attributes <- downscale.BN$clustering.attributes
-
+  
   junction <- compile( as.grain(BN.fit) )
   
   if (is.null(clusterS)){
@@ -47,9 +49,9 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
     }
     else if (mode == 1 | mode == 2){
       if (!(is.null(clusterS))){
-      clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+        clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+        clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
       }
-      clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
 
       if (cluster.type == "PSOCK") {
         clusterExport(cl, "clustered" , envir = environment() )
@@ -66,17 +68,16 @@ downscale.BN <- function(downscale.BN, global, as.matrix = FALSE, parallelize = 
     else if (mode == 1 | mode == 2){
       if (!(is.null(clusterS))){
         clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
+        clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
       }  
-      clustered <- matrix(as.factor(clustered), ncol = NCOL(clustered))  # reconverted to categorical
       PT <- apply(clustered, MARGIN = 1 , FUN = predict.DBN , predictors = predictors, 
                   junction = junction , predictands = predictands )
     }
   }
 
-    if (as.matrix == TRUE){ return( aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2)) ) } else{ return(PT) }
+  if (as.matrix == TRUE){ 
+    downscaled <- aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2))
+    return( downscaled[,,match(predictands, colnames(downscaled[1,,]))] )
+  } else{ return(PT) }
 }
 
-predict.DBN <- function(categorized, predictors, junction, predictands) { 
-  evid <- setEvidence(junction, predictors, categorized)
-  return( querygrain(evid, nodes = predictands, type = "marginal") )
-}

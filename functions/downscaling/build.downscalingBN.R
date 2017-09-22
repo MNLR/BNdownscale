@@ -117,21 +117,24 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     else { bnlearning.args.list[["blacklist"]] <- global.restrictions }
   }
   
-  bnlearning.args.list[["x"]] <- data[[1]]
   if ( (identical(  bnlearning.algorithm, hc.local2)) | (identical(  bnlearning.algorithm, tabu.local2)) ){
     bnlearning.args.list[["positions"]] <- data[[2]]
   }
   
   data[[1]][] <- lapply( data[[1]], as.factor) 
+  bnlearning.args.list[["x"]] <- data[[1]]
 
   print("Building Bayesian Network...")
-  bn <- do.call(bnlearning.algorithm, bnlearning.args.list)
+  bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
+  #if (identical(bnlearning.algorithm, gs) | identical(bnlearning.algorithm, iamb) | identical(bnlearning.algorithm, fast.iamb) | identical(bnlearning.algorithm, inter.iamb) | identical(bnlearning.algorithm, mmpc) | identical(bnlearning.algorithm, si.hiton.pc)){
+  #  bn <- pdag2dag(bn, ordering = colnames(data[[1]]) )
+  #}
   bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method )
   print("Done.")
 
   if (output.marginals){
     print("Building Marginal Distributions...")
-    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, clusterS = clusterS, Nglobals = Nglobals) )
+    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, Nglobals = Nglobals) )
     print("Done.")
   }
   else {marginals_ <- NULL}
@@ -145,7 +148,8 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
                bnlearning.algorithm = bnlearning.algorithm,
                clustering.args.list = clustering.args.list,
                bnlearning.args.list = bnlearning.args.list,
-               param.learning.method = param.learning.method)    )
+               param.learning.method = param.learning.method)    
+          )
 }
 
 
