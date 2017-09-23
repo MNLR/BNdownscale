@@ -1,6 +1,6 @@
 source("functions/local.bnlearning/aux_functions/build.distanceBlacklist.R")
 
-tabu.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL, whitelist = NULL,
+tabu.local <- function(x, positions, distance, norm = "2", exceptions = NULL, plotrestrictions = FALSE, start = NULL, whitelist = NULL,
                         blacklist = NULL, score = NULL, ..., debug = FALSE, tabu = 10, max.tabu = tabu, max.iter = Inf, 
                         maxp = Inf, optimized = TRUE ) {
  
@@ -19,25 +19,8 @@ tabu.local2 <- function(x, positions, distance, norm = "2", exceptions = NULL, p
   #  ---- OUTPUT:
   #             object of class bn from bnlearn library.
   
-  names <- colnames(x)
-  try(if(length(names) != NCOL(positions)) stop("Number of positions is not equal to number of nodes."))
-  
-  if (plotrestrictions &  NROW(positions) <= 2 ) {
-    plot.graphrestrictions(nodes, positions, distance )
-  }
-  
-  if ( !(is.null(exceptions)) ){
-    names <- names[ -exceptions ]
-    positions <- positions[ , - exceptions]
-  }
-  
-  for.the.blacklist <- build.distanceBlacklist(names, positions, distance, norm)
-  
-  if (is.null(blacklist) ) {  blacklist <- matrix(nrow = 0, ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))}
-  
-  blacklist <- rbind(blacklist, for.the.blacklist)
-  
-  if (debug == TRUE){ print(blacklist) }
+  blacklist <- build.distanceBlacklist( colnames(x), positions, distance, exceptions = exceptions, blacklist = blacklist,
+                                        norm = norm, plotrestrictions = plotrestrictions, debug = debug)
   
   return( tabu(x, start = start, whitelist = whitelist, blacklist = blacklist, score = score, ... , debug = debug, tabu = tabu,
                max.tabu = max.tabu, max.iter = max.iter, maxp = maxp, optimized = optimized) )

@@ -1,6 +1,18 @@
 source("functions/local.bnlearning/aux_functions/learning.complement2.R")
 
-build.distanceBlacklist <- function(names, positions, distance, norm = "2") {
+build.distanceBlacklist <- function(names, positions, distance, exceptions = NULL, blacklist = NULL, norm = "2",
+                                    plotrestrictions = FALSE, debug = FALSE) {
+  
+  try(if(length(names) != NCOL(positions)) stop("Number of positions is not equal to number of nodes."))
+  
+  if (plotrestrictions &  NROW(positions) <= 2 ) {
+    plot.graphrestrictions(nodes, positions, distance )
+  }
+  
+  if ( !(is.null(exceptions)) ){
+    names <- names[ -exceptions ]
+    positions <- positions[ , - exceptions]
+  }
   
   names.list <- list()
   positions.list <- list()
@@ -14,8 +26,17 @@ build.distanceBlacklist <- function(names, positions, distance, norm = "2") {
     positions <- matrix(positions[ , 2:NCOL(positions)], nrow = nrow_) # matrix needs to be preserved
   }
 
-  distanceBlacklist <- mapply(FUN =  learning.complement2 , nodes = names.list , positions = positions.list,  MoreArgs=list(distance = distance, norm_ = norm) )
+  distanceBlacklist <- mapply(FUN =  learning.complement2 , nodes = names.list , positions = positions.list, 
+                              MoreArgs=list(distance = distance, norm_ = norm) )
   distanceBlacklist <- do.call("rbind", distanceBlacklist) 
 
-  return(distanceBlacklist)
+  if (debug == TRUE){ 
+    print("Generated blacklist: ")
+    print(distanceBlacklist)
+  }
+  
+  if (is.null(blacklist) ) {  blacklist <- matrix(nrow = 0, ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))}
+  blacklist <- rbind(blacklist, distanceBlacklist)
+  
+  return(blacklist)
 }

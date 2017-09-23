@@ -10,8 +10,14 @@ library(sfsmisc)
 
 source("functions/downscaling/build.downscalingBN.R")
 source("functions/downscaling/downscale.BN.R")
-source("functions/local.bnlearning/hc.local2.R")
-source("functions/local.bnlearning/tabu.local2.R")
+source("functions/local.bnlearning/hc.local.R")
+source("functions/local.bnlearning/tabu.local.R")
+source("functions/local.bnlearning/gs.local.R")
+source("functions/local.bnlearning/iamb.local.R")
+source("functions/local.bnlearning/fast.iamb.local.R")
+source("functions/local.bnlearning/inter.iamb.local.R")
+source("functions/local.bnlearning/mmpc.local.R")
+source("functions/local.bnlearning/si.hilton.pc.local.R")
 source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/marginals.R")
 source("functions/validation/c.table.R")
@@ -34,38 +40,32 @@ local$Data[ local$Data >= 1] <-  1
 
 global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd")
 
-DBN <- build.downscalingBN(local, global, mode = 22, bnlearning.algorithm = hc.local2, 
-                           ncategories = 3,
+DBN <- build.downscalingBN(local, global, mode = 22, bnlearning.algorithm = "tabu", 
+                           ncategories = 4,
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                           #bnlearning.args.list = list(alpha = 0.01, debug = TRUE),
-                           bnlearning.args.list = list(distance = 6),
+                           clustering.args.list = list(k = 6, family = kccaFamily("kmeans") ), 
+                           #bnlearning.args.list = list(distance = 6, alpha = 0.01, debug = TRUE),
+                           #bnlearning.args.list = list(distance = 5),
                            param.learning.method = "bayes")
 
-plot.DBN( DBN, dev=TRUE , nodes = c(13))
+plot.DBN( DBN, dev=TRUE , nodes = c(13, 33))
 
 test <- subsetGrid(global, years = c(1991, 1992, 1993) )
 real <- subsetGrid(local, years =  c(1991, 1992, 1993)  )
 
-downscaled <- downscale.BN(DBN , global , parallelize = TRUE , as.matrix = TRUE,  n.cores = 7) 
+test <- global
+real <- local
+
+downscaled <- downscale.BN(DBN , test , parallelize = TRUE ,  n.cores = 7) 
 MPT <- DBN$marginals
 P_1 <- MPT["1", ]
 
 
-#P_1_ord <- P_1[c(5,3,1,2,7,8,11,10,4,9,6)]
-#downscaled_ord <- downscaled[, ,c(5,3,1,2,7,8,11,10,4,9,6)]
-
-#P_1_ord <- P_1[c(4,1,3,2,6,8,10,11,5,9,7)]
-#downscaled_ord <- downscaled[, ,c(4,1,3,2,6,8,10,11,5,9,7)]
-
-
-P_1_ord <- P_1[c(6,5,1,2,3,8,11,9,7,10,4)]
-downscaled_ord <- downscaled[, ,c(6,5,1,2,3,8,11,9,7,10,4)]
-
-prediction  <- is.mostLikely(downscaled_ord, event = "1", threshold.vector = 1 - P_1_ord)
-c.table(prediction[,1], real$Data[,1])
-c.table.rates(c.table(prediction[,1], real$Data[,1]), "all")
+prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
+ct <- c.table(prediction, real$Data)
+ct
+c.table.rates(ct, "all")
 
 ###
 ###
@@ -73,17 +73,29 @@ c.table.rates(c.table(prediction[,1], real$Data[,1]), "all")
 ###
 
 
-aucS <- auc.DBN(downscaled = downscaled_ord, 
+aucS <- auc.DBN(downscaled = downscaled, 
                 realData = real$Data, 
                 plot.curves = TRUE)
 aucS
+c(mean(aucS), min(aucS), max(aucS))
 
 
+ct1 <- c.table(prediction[ , 1], real$Data[ , 1]) # First station AUC ~~ 0.89
+ct1
+c.table.rates(ct1, "all")
 
 ###
 ###    Mutual Information
 ###
 ###
+
+a <- MI.vs.distance(local)
+mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
+mial <- lm( y ~ x , mia )
+
+dev.new()
+plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
+abline(mial)
 
 # Predictions:
 

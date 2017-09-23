@@ -66,8 +66,10 @@ preprocess <- function(observations, global = NULL,  rm.na = TRUE , rm.na.mode =
         data <- data[noNaNS, ]
       }
     }
-    print(paste0("Removed ", NCOL0 - NCOL(data), " stations."))
-    print(paste0("Removed ", NROW0 - NROW(data), " observations." ))
+    rc <- NCOL0 - NCOL(data)
+    rr <- NROW0 - NROW(data)
+    if (rc != 0){ print(paste0("Removed ", rc , " stations.")) }
+    if (rr != 0){ print(paste0("Removed ", rr , " observations." ))}
   }
   return( list(data , positions ) )
 }

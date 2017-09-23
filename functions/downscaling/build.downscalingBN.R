@@ -2,7 +2,7 @@ source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 source("functions/downscaling/aux_functions/kmeanspp.R")
 source("functions/downscaling/aux_functions/categorize.bn.R")
 
-build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = hc, 
+build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = "hc", 
                                 parallelize = FALSE, n.cores= NULL, cluster.type = "PSOCK",
                                 output.marginals = TRUE,
                                 ncategories = 3,
@@ -21,14 +21,21 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #               the global will not be allowed
   #          3: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
   #               in a single node which will be represented above the grid.
-  # bnlearning.algorithm    Supports all the functions from bnlearn and hc.local2, tabu.local2. Check their corresponding parameters.
+  # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
   # output.marginals        Compute and output Marginal Probability distribution Tables.
+  
+  if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character")}
+  
+  if (substr(bnlearning.algorithm, nchar(bnlearning.algorithm)-5+1, nchar(bnlearning.algorithm)) == "local"){ 
+    is.local <- TRUE
+  } else {is.local <- FALSE}
   
   mode_ <- strsplit(as.character(mode), "")[[1]]
   if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
   mode <- as.numeric(mode_[1])
   mode2 <- mode_[2]
-  
+  cl <- NULL  
+
   if ( mode2 == "1" ) {
     data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
     Nglobals <- length(grep("G", colnames(data[[1]])))
@@ -56,7 +63,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
       print("Clustering done.")
     
       # It does not make sense for the first node (the only global) to have any restriction  if local learning is used
-      if ( !(identical( bnlearning.algorithm ,hc) & !(identical( bnlearning.algorithm ,tabu) ) )){
+      if ( is.local ){
         if ( !( is.null(bnlearning.args.list$exceptions) ) ){
           bnlearning.args.list$exceptions <- c(bnlearning.args.list$exceptions,  1 )
         }
@@ -80,6 +87,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
         stopCluster(cl)
       }
       else {
+        cl <- NULL
         #clusterS1 <- mapply(kcca, p.global, MoreArgs =   clustering.args.list, SIMPLIFY = FALSE)   #### equivalent to:
         clusterS <- lapply(p.global, function(node, cal) return( do.call(kcca, append( list( x = node), cal ) ) ), cal = clustering.args.list)
       }
@@ -99,7 +107,6 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
     Nglobals <- NCOL(global.data)
   }
-  
 
   if (mode == 3) {     # The global node is positioned:
     data[[2]][ 1 , 1 ] <- mean( data[[2]][ 1 , -1 ] )
@@ -108,7 +115,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     data[[2]][ 2 , 1 ] <- y
   }
   else if (mode == 2){ # arcs between global nodes are forbidden
-    global.restrictions <- build.distanceBlacklist(names <- colnames(data[[1]][ , 1:Nglobals ]), 
+    global.restrictions <- build.distanceBlacklist(names = colnames(data[[1]][ , 1:Nglobals ]), 
                                                    positions = matrix(seq(1,Nglobals), nrow = 1), 
                                                    distance =  0.1 )
     if ( !( is.null(bnlearning.args.list$blacklist) ) ){
@@ -117,7 +124,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     else { bnlearning.args.list[["blacklist"]] <- global.restrictions }
   }
   
-  if ( (identical(  bnlearning.algorithm, hc.local2)) | (identical(  bnlearning.algorithm, tabu.local2)) ){
+  if ( is.local ){
     bnlearning.args.list[["positions"]] <- data[[2]]
   }
   
@@ -125,15 +132,24 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   bnlearning.args.list[["x"]] <- data[[1]]
 
   print("Building Bayesian Network...")
-  bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
-  #if (identical(bnlearning.algorithm, gs) | identical(bnlearning.algorithm, iamb) | identical(bnlearning.algorithm, fast.iamb) | identical(bnlearning.algorithm, inter.iamb) | identical(bnlearning.algorithm, mmpc) | identical(bnlearning.algorithm, si.hiton.pc)){
-  #  bn <- pdag2dag(bn, ordering = colnames(data[[1]]) )
-  #}
-  bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method )
+  alg <- strsplit(bnlearning.algorithm, split = ".", fixed = TRUE)[[1]][1]
+  if ( (alg != "hc")  & (alg != "tabu") ) { # constraint-based algorithms allow parallelization
+    if ( parallelize & is.null(cl) ) { # initialize cluster if it is not already
+      if ( is.null(n.cores) ){
+        n.cores <- floor(detectCores()/2)
+      }
+      # Initiate cluster
+      cl <- makeCluster(n.cores, type = cluster.type )
+      bnlearning.args.list[["cluster"]] <- cl 
+    }
+    bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
+  }
+  else { bn <-  do.call(bnlearning.algorithm, bnlearning.args.list) }
+  bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method)
   print("Done.")
 
   if (output.marginals){
-    print("Building Marginal Distributions...")
+    print("Computing Marginal Distributions...")
     marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, Nglobals = Nglobals) )
     print("Done.")
   }
