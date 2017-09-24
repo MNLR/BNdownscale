@@ -1,5 +1,4 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
-source("functions/downscaling/aux_functions/kmeanspp.R")
 source("functions/downscaling/aux_functions/categorize.bn.R")
 
 build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = "hc", 
@@ -115,9 +114,10 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     data[[2]][ 2 , 1 ] <- y
   }
   else if (mode == 2){ # arcs between global nodes are forbidden
+    if ( !(is.null(bnlearning.args.list$debug)) ){debug <- bnlearning.args.list$debug} else {debug <- FALSE}
     global.restrictions <- build.distanceBlacklist(names = colnames(data[[1]][ , 1:Nglobals ]), 
                                                    positions = matrix(seq(1,Nglobals), nrow = 1), 
-                                                   distance =  0.1 )
+                                                   distance =  0.1, debug = debug  )
     if ( !( is.null(bnlearning.args.list$blacklist) ) ){
       bnlearning.args.list$blacklist <- rbind(bnlearning.args.list$blacklist,  global.restrictions)
     }

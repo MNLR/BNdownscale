@@ -30,7 +30,7 @@ build.distanceBlacklist <- function(names, positions, distance, exceptions = NUL
                               MoreArgs=list(distance = distance, norm_ = norm) )
   distanceBlacklist <- do.call("rbind", distanceBlacklist) 
 
-  if (debug == TRUE){ 
+  if (debug){ 
     print("Generated blacklist: ")
     print(distanceBlacklist)
   }
