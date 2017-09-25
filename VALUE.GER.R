@@ -37,13 +37,26 @@ global <- makeMultiGrid(q850.germany, t850.germany, z850.germany)
 
 obs.dataset <- file.path(find.package("R.VALUE"), "example_datasets", "VALUE_53_ECAD_Germany_v1.zip")
 local <- loadValueStations(dataset = obs.dataset, var = "precip"  )
-localPRED <- loadValueStations(dataset = "data/VALUE_ERA_INTERIM075_53_Germany_v1.zip", var = "precip"  )
+REA <- loadValueStations(dataset = "data/VALUE_ERA_INTERIM075_53_Germany_v1.zip", var = "precip"  )
+oPred <- loadValueStations(dataset = "data/VALUE_RACMO011_53_Germany_v1.zip", var = "precip"  )
 
 local$Data[ local$Data < 1  ] <-  0
 local$Data[ local$Data >= 1 ] <-  1
 
-localPRED$Data[ localPRED$Data < 1  ] <-  0
-localPRED$Data[ localPRED$Data >= 1 ] <-  1
+oPred$Data[ oPred$Data < 1  ] <-  0
+oPred$Data[ oPred$Data >= 1 ] <-  1
+ct.oPred <- c.table(oPred$Data, real$Data)
+ct.oPred
+rates.oPred <- c.table.rates(ct.oPred, "all")
+rates.oPred
+
+REA$Data[ REA$Data < 1  ] <-  0
+REA$Data[ REA$Data >= 1 ] <-  1
+ct.REA <- c.table(REA$Data, real$Data)
+ct.REA
+rates.REA <- c.table.rates(ct.REA, "all")
+rates.REA
+
 
 testPRED <- subsetGrid(localPRED, years = c(1991), season = c(2))
 test <- subsetGrid(global, years = c(1991), season = c(2))
@@ -52,14 +65,14 @@ real <- subsetGrid(local,  years = c(1991), season = c(2))
 #from <- array("G.Atmosphere", 53)
 #to <-  c("D.3987", "D.47", "D.2760", "D.2761", "D.4297", "D.51", "D.4472", "D.4669", "D.4079", "D.52", "D.4572", "D.4007", "D.3991", "D.4882", "D.4074", "D.4187", "D.4617",  "D.4954", "D.4014", "D.4776", "D.477", "D.55", "D.4499", "D.4710", "D.42", "D.4652", "D.480", "D.4004", "D.4838", "D.812", "D.4637", "D.475", "D.4284", "D.4218", "D.356", "D.4009", "D.4644", "D.4083",   "D.54", "D.4676",  "D.48", "D.4002", "D.488", "D.2006", "D.472", "D.4015", "D.470", "D.468", "D.3994", "D.58", "D.483", "D.49", "D.469")
 
-DBN <- build.downscalingBN(local, global, mode = 22, bnlearning.algorithm = "hc.local", 
-                           ncategories = 10,
+DBN <- build.downscalingBN(local, global, mode = 20, bnlearning.algorithm = "hc", 
+                           ncategories = 4,
                            parallelize = TRUE, n.cores = 7,
-                           output.marginals = FALSE, 
-                           clustering.args.list = list(k = 16, family = kccaFamily("kmeans") ), 
-                           #bnlearning.args.list = list(test = "mc-mi", distance = 2, debug = TRUE),
-                           bnlearning.args.list = list(distance = 2),
-                           param.learning.method = "bayes")
+                           output.marginals = TRUE, 
+                           #clustering.args.list = list(k = 12, family = kccaFamily("kmedians") ), 
+                           #bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
+                           #bnlearning.args.list = list(distance = 4),
+                           param.learning.method = "mle")
 plot.DBN( DBN, dev=TRUE , nodes = c(28))
 score(DBN$BN, DBN$training.data )
 
@@ -70,7 +83,7 @@ downscaled <- downscale.BN(DBN , test, parallelize = TRUE,  n.cores = 7)
 
 MPT <-DBN$marginals
 P_1 <- MPT["1", ]
-prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector =  1 - P_1)
+prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1- P_1)
 ct <- c.table(prediction, real$Data)
 ct
 rates <- c.table.rates(ct, "all")
@@ -90,25 +103,22 @@ aucS <- auc.DBN(downscaled = downscaled,
 aucS
 c(mean(aucS), min(aucS), max(aucS))
 
+###
+### Against REA
+###
+est <- 46
+c.table(prediction[,est], real$Data[,est])
+c.table.rates( c.table(prediction[,est], real$Data[,est]), "all")
 
+c.table(REA$Data[,est], real$Data[,est])
+c.table.rates( c.table(REA$Data[,est], real$Data[,est]), "all")
+
+c.table(oPred$Data[,est], real$Data[,est])
+c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
 ###
 ###
 ###   Mutual Information
 ###
-
-a <- MI.vs.distance(local)
-b <- MI.vs.distance(localPRED)
-mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
-mial <- lm( y ~ x , mia )
-mib <- data.frame(y = b[ 2, ], x = b[ 1, ])
-mibl <- lm( y ~ x , mib )
-
-dev.new()
-plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
-points(b[1, ], b[2, ], col = "blue")
-
-abline(mial)
-abline(mibl, col = "blue")
 
 # Predictions:
 prediction.p <- local
@@ -117,10 +127,30 @@ prediction.p$Data <- prediction
 attr(prediction.p$Data, 'dim') <- attributes(real$Data)$dim
 attr(prediction.p$Data, 'dimensions') <- attributes(real$Data)$dimensions
 
-c <- MI.vs.distance(prediction.p)
-mic <- data.frame(y = c[ 2, ], x = c[ 1, ])
-micl <- lm( y ~ x , mic )
+d <- MI.vs.distance(prediction.p)
+mid <- data.frame(y = d[ 2, ], x = d[ 1, ])
+midl <- lm( y ~ x , mid )
+
+# 
+a <- MI.vs.distance(local)
+b <- MI.vs.distance(REA)
+c <- MI.vs.distance(oPred)
+mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
+mial <- lm( y ~ x , mia )
+mib <- data.frame(y = b[ 2, ], x = b[ 1, ])
+mibl <- lm( y ~ x , mib )
+
+
+dev.new()
+plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
+points(b[1, ], b[2, ], col = "blue")
+points(c[1, ], c[2, ], col = "green")
+points(d[1, ], d[2, ], col = "red")
+
+abline(mial)
+abline(mibl, col = "blue")
+
 
 points(c[1, ], c[ 2, ], col =  "red")
 abline(micl, col = "red")
-
+legend(c("Observations", ))

@@ -12,16 +12,21 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              Can be categorical or continuous. See mode
   #              2 coordinate postions are expected. 
-  #              NaNs are not expected. POR COMPROBAR QUE PASA CON EL CLUSTERING
+  #              NaNs are not expected when categorization is to be done, modes *0 and *2
   # local    predictands. Expects categorical data. 
   #              NaNs will be processed
-  # mode     1: Clustering will be performed for each global (predictor) node separately
-  #          2: Clustering will be performed for each global (predictor) node separately. Arcs between nodes from
-  #               the global will not be allowed
-  #          3: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
+  # mode     10: Clustering will be performed for each global (predictor) node separately
+  #          20: Clustering will be performed for each global (predictor) node separately. Arcs between global nodes will not be allowed
+  #          30: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
   #               in a single node which will be represented above the grid.
+  #                 clustering.args.list is pased to flexclust::kcca() function. Check its arguments. By default K-Means algorithm is used. 
+  #          11: No categorization will be performed, use when global data is categorical.
+  #          12: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed.
+  #          21: Simple categorization will be performed, use when global data is categorical. 
+  #          22: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed
+  #                 ncategories is a mandatory argument if this mode is used.
   # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
-  # output.marginals        Compute and output Marginal Probability distribution Tables.
+  # output.marginals        Compute and output Marginal Probability distribution Tables. 
   
   if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character")}
   
