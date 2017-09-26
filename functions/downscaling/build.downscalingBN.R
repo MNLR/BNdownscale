@@ -107,7 +107,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
         xyCoords <- global[[1]]$xyCoords
       }
     }
-    else {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
+    else {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22")}
     data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
     Nglobals <- NCOL(global.data)
   }
