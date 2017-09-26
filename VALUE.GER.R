@@ -26,7 +26,6 @@ source("functions/validation/MI.vs.distance.R")
 source("functions/downscaling/aux_functions/is.mostLikely.R")
 source("functions/validation/c.table.rates.R")
 
-
 ####
 ####   DATA 
 ####
