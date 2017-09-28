@@ -34,7 +34,7 @@ categorize.bn <- function( data , mode , ncategories, breaks.list = NULL ){
   return( list(categorized, breaks.list) ) 
   }
   else {
-    stop("This is not supported yet!")
+    stop("This is not supported!")
   }
 }
 

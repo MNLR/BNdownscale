@@ -38,7 +38,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
   mode <- as.numeric(mode_[1])
   mode2 <- mode_[2]
-  cl <- NULL  
+  cl <- NULL
 
   if ( mode2 == "1" ) {
     data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
@@ -145,7 +145,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
       }
       # Initiate cluster
       cl <- makeCluster(n.cores, type = cluster.type )
-      bnlearning.args.list[["cluster"]] <- cl 
+      bnlearning.args.list[["cluster"]] <- cl
     }
     bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
   }
