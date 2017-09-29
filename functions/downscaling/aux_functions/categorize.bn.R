@@ -22,15 +22,21 @@ categorize.bn <- function( data , mode , ncategories, breaks.list = NULL ){
     
     }
 
+    #categorized <- mapply( function( node, breaks ) {
+    #  nodevars <- split( as.matrix(node) , col(node) )
+    #  breakvars <- split( breaks , col(breaks) )
+    #  return( interaction(as.data.frame( mapply( function(var, break_) cut(var, break_) , nodevars, breakvars , SIMPLIFY = TRUE )) ) )
+    #},
+    #global.p,
+    #breaks.list  )
     categorized <- mapply( function( node, breaks ) {
       nodevars <- split( as.matrix(node) , col(node) )
       breakvars <- split( breaks , col(breaks) )
-      return( interaction(as.data.frame( mapply( function(var, break_) cut(var, break_) , nodevars, breakvars , SIMPLIFY = TRUE )) ) )
-      
+      return( as.data.frame( mapply( function(var, break_) cut(var, break_) , nodevars, breakvars , SIMPLIFY = TRUE )) ) 
     },
     global.p,
     breaks.list  )
-  
+    
   return( list(categorized, breaks.list) ) 
   }
   else {

@@ -40,16 +40,17 @@ local$Data[ local$Data >= 1] <-  1
 
 global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd")
 
-DBN <- build.downscalingBN(local, global, mode = 22, bnlearning.algorithm = "tabu", 
+DBN <- build.downscalingBN(local, global, mode = 50, bnlearning.algorithm = "hc.local", 
                            ncategories = 4,
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           clustering.args.list = list(k = 6, family = kccaFamily("kmeans") ), 
+                           clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
                            #bnlearning.args.list = list(distance = 6, alpha = 0.01, debug = TRUE),
-                           #bnlearning.args.list = list(distance = 5),
+                           bnlearning.args.list = list(distance = 5),
                            param.learning.method = "bayes")
 
-plot.DBN( DBN, dev=TRUE , nodes = c(13, 33))
+plot.DBN( DBN, dev=TRUE  , edge.arrow.size = 0.25, node.size = 0)
+arc.strength(DBN$BN, DBN$training.data, criterion = "mi")
 
 test <- subsetGrid(global, years = c(1991, 1992, 1993) )
 real <- subsetGrid(local, years =  c(1991, 1992, 1993)  )
@@ -57,7 +58,7 @@ real <- subsetGrid(local, years =  c(1991, 1992, 1993)  )
 test <- global
 real <- local
 
-downscaled <- downscale.BN(DBN , test , parallelize = TRUE ,  n.cores = 7) 
+downscaled <- downscale.BN(DBN , test , parallelize = TRUE ,  n.cores = 7, prediction.type = "probabilities")
 MPT <- DBN$marginals
 P_1 <- MPT["1", ]
 
@@ -75,7 +76,8 @@ c.table.rates(ct, "all")
 
 aucS <- auc.DBN(downscaled = downscaled, 
                 realData = real$Data, 
-                plot.curves = TRUE)
+                plot.curves = TRUE, 
+                points = 100)
 aucS
 c(mean(aucS), min(aucS), max(aucS))
 
@@ -89,7 +91,7 @@ c.table.rates(ct1, "all")
 ###
 ###
 
-a <- MI.vs.distance(local)
+a <- MI.vs.distance(local, season = "DJF")
 mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
 mial <- lm( y ~ x , mia )
 

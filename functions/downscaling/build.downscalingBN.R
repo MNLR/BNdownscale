@@ -21,21 +21,21 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #               in a single node which will be represented above the grid.
   #                 clustering.args.list is pased to flexclust::kcca() function. Check its arguments. By default K-Means algorithm is used. 
   #          11: No categorization will be performed, use when global data is categorical.
-  #          12: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed.
-  #          21: Simple categorization will be performed, use when global data is categorical. 
-  #          22: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed
-  #                 ncategories is a mandatory argument if this mode is used.
+  #          21: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed.
+  #          12: Simple categorization will be performed. 
+  #          22: Simple categorization will be performed.  Arcs between global nodes will not be allowed
+  #                 Especify ncategories.
   # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
   # output.marginals        Compute and output Marginal Probability distribution Tables. 
   
-  if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character")}
+  if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character") }
   
   if (substr(bnlearning.algorithm, nchar(bnlearning.algorithm)-5+1, nchar(bnlearning.algorithm)) == "local"){ 
     is.local <- TRUE
   } else {is.local <- FALSE}
   
   mode_ <- strsplit(as.character(mode), "")[[1]]
-  if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22, 23")}
+  if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22")}
   mode <- as.numeric(mode_[1])
   mode2 <- mode_[2]
   cl <- NULL
@@ -56,9 +56,22 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   }
   else if (mode2 == "0") {
     p.global <- preprocess.forKmeans(global, mode)
-    if (mode == 3){ clustering.attributes <- list(attributes(p.global)$`scaled:center`, attributes(p.global)$`scaled:scale`) }
-    else { clustering.attributes <- lapply(p.global, function(node) return(list(attributes(node)$`scaled:center`, attributes(node)$`scaled:scale`) ) )}
+    if ( (mode == 4) | (mode == 5) ) { 
+      positions.done <- TRUE
+      xyCoords <- p.global[[2]]
+      p.global <- p.global[[1]]
+      print(p.global)
+      clustering.attributes <- NULL
+    } else { positions.done <- FALSE }
 
+    
+    if (mode == 3){ clustering.attributes <- list(attributes(p.global)$`scaled:center`, attributes(p.global)$`scaled:scale`) }
+    else if ((mode == 1) | (mode == 2)){
+      clustering.attributes <- lapply(p.global, function(node) return(list(attributes(node)$`scaled:center`, attributes(node)$`scaled:scale`) ) )
+    }
+    if (mode == 4) { mode <- 1 }
+    if (mode == 5) { mode <- 2 }
+  
     print("Performing clustering...")
     if (mode == 3) {
       clustering.input <- append( list( x = p.global), clustering.args.list )
@@ -98,16 +111,18 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
 
       global.data <- sapply(clusterS, predict) # matrix of data where each column is a node with its "climate value" per observation
       global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
+      print(global.data)
       print("Done.")
-    
-      if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
-        xyCoords <- global$xyCoords
-      }
-      else{
-        xyCoords <- global[[1]]$xyCoords
+      if ( !(positions.done) ){
+        if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
+          xyCoords <- global$xyCoords
+        }
+        else{
+          xyCoords <- global[[1]]$xyCoords
+        }
       }
     }
-    else {stop("Invalid mode. Accepted modes are 01, 02, 03, 11, 12, 21, 22")}
+    else {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22")}
     data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
     Nglobals <- NCOL(global.data)
   }
@@ -132,11 +147,12 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   if ( is.local ){
     bnlearning.args.list[["positions"]] <- data[[2]]
   }
-  
+
   data[[1]][] <- lapply( data[[1]], as.factor) 
   bnlearning.args.list[["x"]] <- data[[1]]
 
   print("Building Bayesian Network...")
+  print(bnlearning.args.list)
   alg <- strsplit(bnlearning.algorithm, split = ".", fixed = TRUE)[[1]][1]
   if ( (alg != "hc")  & (alg != "tabu") ) { # constraint-based algorithms allow parallelization
     if ( parallelize & is.null(cl) ) { # initialize cluster if it is not already

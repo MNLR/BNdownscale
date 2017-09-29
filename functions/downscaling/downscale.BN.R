@@ -29,20 +29,32 @@ downscale.BN <- function(downscale.BN, global,
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
   clustering.attributes <- downscale.BN$clustering.attributes
+  oldmode <- mode
+  
+  if ((mode == 4) | (mode == 5)) {
+    scale_ <- FALSE 
+    only.nodes <- TRUE
+    if (mode == 4) {mode <- 1}
+    if (mode == 5) {mode <- 2}
+  } else {
+    scale_ <- TRUE
+    only.nodes <- NULL
+  }
   
   print("Compiling junction...")
   junction <- compile( as.grain(BN.fit) )
   print("Done.")
     
   print("Propagating evidence and computing Probability Tables...")
-  if (is.null(clusterS)){ # data is expected categorized
-    if (mode2 == "1"){  
+  if (is.null(clusterS)){
+    if (mode2 == "1"){   # data is expected categorized
       clustered <- as.matrix(preprocess(global)[[1]]) 
     } 
-    else { clustered  <- categorize.bn( global, mode, NULL , clustering.attributes)[[1]] }  # easy-categorization
+    else { clustered  <- categorize.bn( global, mode, NULL , clustering.attributes )[[1]] }  # easy-categorization
   }
   else{
-    p.global <- preprocess.forKmeans(global, mode, scale.args = clustering.attributes )
+    p.global <- preprocess.forKmeans(global, oldmode, scale.args = clustering.attributes,
+                                     scale_ = scale_, only.nodes = only.nodes)
   }
   if ( parallelize == TRUE) {
     if ( is.null(n.cores) ){
