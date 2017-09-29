@@ -13,7 +13,7 @@ preprocess.forKmeans <- function(dataset, mode, scale.args = NULL, scale_ = TRUE
   }
   if ( (mode == 4) | (mode == 5) ) {
     positions <- preprocess(dataset)[[2]]
-    if (is.null(colnames(positions))){ colnames(positions) <- as.character( seq(1, NCOL(variables.list[[i]])) ) }
+    if (is.null(colnames(positions))){ colnames(positions) <- as.character( seq(1, NCOL(variables.list[[1]])) ) }
     
     positions.list <- list()
     for (i in 1:length(variables.list)){

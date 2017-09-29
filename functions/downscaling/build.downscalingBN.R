@@ -1,13 +1,16 @@
 source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 source("functions/downscaling/aux_functions/categorize.bn.R")
 
-build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = "hc", 
+build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm = "hc",  
                                 parallelize = FALSE, n.cores= NULL, cluster.type = "PSOCK",
                                 output.marginals = TRUE,
                                 ncategories = 3,
                                 clustering.args.list = list(k = 12, family = kccaFamily("kmeans")),
                                 bnlearning.args.list = list(),
-                                param.learning.method = "bayes") {
+                                param.learning.method = "bayes",
+                                bnlearning.algorithm2 = NULL,
+                                bnlearning.args.list2 = NULL
+                                ) {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              Can be categorical or continuous. See mode
@@ -19,12 +22,21 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #          20: Clustering will be performed for each global (predictor) node separately. Arcs between global nodes will not be allowed
   #          30: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
   #               in a single node which will be represented above the grid.
+  #          40: Clustering will be performed for each global (predictor) node and each variable separately
+  #          50: Clustering will be performed for each global (predictor) node and each variable separately. Arcs between global nodes will not be allowed
+  #          60: Double-step process.
+  #          70: Double-step process. Arcs between global nodes will not be allowed.
   #                 clustering.args.list is pased to flexclust::kcca() function. Check its arguments. By default K-Means algorithm is used. 
   #          11: No categorization will be performed, use when global data is categorical.
   #          21: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed.
   #          12: Simple categorization will be performed. 
   #          22: Simple categorization will be performed.  Arcs between global nodes will not be allowed
-  #                 Especify ncategories.
+  #          62: Double-step process.
+  #          72: Double-step process. Arcs between global nodes will not be allowed.
+  #           Especify ncategories.
+  #               For modes 60,70,62,72 bnlearning.algorithm and bnlearning.args.list are passed to the first
+  #               learning. If  bnlearning.algorithm2 and bnlearning.args.list2 are not specified the former will be used
+  #               Caution with the blacklist and whitelist arguments and input coherent pairs.
   # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
   # output.marginals        Compute and output Marginal Probability distribution Tables. 
   
@@ -39,7 +51,18 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   mode <- as.numeric(mode_[1])
   mode2 <- mode_[2]
   cl <- NULL
-
+  
+  if (mode == 6 | mode == 7){
+    mode <- 1
+    mode2 <- "1"
+    old.global <- global
+    global <- NULL
+    fit <- FALSE
+    double.building.process <- TRUE
+  } else { 
+    double.building.process <- FALSE
+    fit <- TRUE
+  }
   if ( mode2 == "1" ) {
     data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
     Nglobals <- length(grep("G", colnames(data[[1]])))
@@ -166,27 +189,52 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
   }
   else { bn <-  do.call(bnlearning.algorithm, bnlearning.args.list) }
-  bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method)
+  if (fit){ bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method) }
   print("Done.")
-
-  if (output.marginals){
-    print("Computing Marginal Distributions...")
-    marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, Nglobals = Nglobals) )
-    print("Done.")
-  }
-  else {marginals_ <- NULL}
   
-  return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, 
-               clusterS = clusterS, 
-               clustering.attributes = clustering.attributes, 
-               mode = mode_,
-               Nglobals = Nglobals,
-               marginals = marginals_,
-               bnlearning.algorithm = bnlearning.algorithm,
-               clustering.args.list = clustering.args.list,
-               bnlearning.args.list = bnlearning.args.list,
-               param.learning.method = param.learning.method)    
-          )
+  if ( double.building.process ){
+    print("Injecting Globals into Bayesian Network...")
+    whitelist <- apply( bn$arcs, MARGIN = 2,function(x) paste0("D.", x) ) 
+
+    if (paste0(mode_[1], mode_[2]) == "60") {mode_2 <- 10}
+    if (paste0(mode_[1], mode_[2]) == "70") {mode_2 <- 20}
+    if (paste0(mode_[1], mode_[2]) == "62") {mode_2 <- 12}
+    if (paste0(mode_[1], mode_[2]) == "72") {mode_2 <- 22}
+    if (is.null(bnlearning.algorithm2) ){ bnlearning.algorithm2 <- bnlearning.algorithm} 
+    if (is.null( bnlearning.args.list2 ) ){ bnlearning.args.list2 <- bnlearning.args.list}
+    
+    if ( is.null(bnlearning.args.list2$whitelist) ){ bnlearning.args.list2[["whitelist"]] <- whitelist }
+    else{ rbind(whitelist, bnlearning.args.list2$whitelist) }
+
+    DBN <-  build.downscalingBN(local, old.global, mode = mode_2, bnlearning.algorithm = bnlearning.algorithm2,
+                                    parallelize = parallelize, n.cores= n.cores, cluster.type = cluster.type,
+                                    output.marginals = output.marginals,
+                                    ncategories = ncategories,
+                                    clustering.args.list = clustering.args.list,
+                                    bnlearning.args.list = bnlearning.args.list2,
+                                    param.learning.method = param.learning.method)
+
+    return(DBN)
+  }  else { 
+    if (output.marginals){
+      print("Computing Marginal Distributions...")
+      marginals_ <- marginals( list(BN = bn, BN.fit = bn.fit, Nglobals = Nglobals) )
+      print("Done.")
+    }
+    else {marginals_ <- NULL}
+  
+    return( list(BN = bn, training.data = data[[1]], positions = data[[2]], BN.fit = bn.fit, 
+                 clusterS = clusterS, 
+                 clustering.attributes = clustering.attributes, 
+                 mode = mode_,
+                 Nglobals = Nglobals,
+                 marginals = marginals_,
+                 bnlearning.algorithm = bnlearning.algorithm,
+                 clustering.args.list = clustering.args.list,
+                 bnlearning.args.list = bnlearning.args.list,
+                 param.learning.method = param.learning.method)    
+            )
+  }
 }
 
 

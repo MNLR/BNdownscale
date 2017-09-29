@@ -44,33 +44,32 @@ local$Data[ local$Data >= 1 ] <-  1
 
 oPred$Data[ oPred$Data < 1  ] <-  0
 oPred$Data[ oPred$Data >= 1 ] <-  1
-ct.oPred <- c.table(oPred$Data, real$Data)
+ct.oPred <- c.table(oPred$Data, local$Data)
 ct.oPred
 rates.oPred <- c.table.rates(ct.oPred, "all")
 rates.oPred
 
 REA$Data[ REA$Data < 1  ] <-  0
 REA$Data[ REA$Data >= 1 ] <-  1
-ct.REA <- c.table(REA$Data, real$Data)
+ct.REA <- c.table(REA$Data, local$Data)
 ct.REA
 rates.REA <- c.table.rates(ct.REA, "all")
 rates.REA
 
 
-testPRED <- subsetGrid(localPRED, years = c(1991), season = c(2))
 test <- subsetGrid(global, years = c(1991), season = c(2))
 real <- subsetGrid(local,  years = c(1991), season = c(2))
 
 #from <- array("G.Atmosphere", 53)
 #to <-  c("D.3987", "D.47", "D.2760", "D.2761", "D.4297", "D.51", "D.4472", "D.4669", "D.4079", "D.52", "D.4572", "D.4007", "D.3991", "D.4882", "D.4074", "D.4187", "D.4617",  "D.4954", "D.4014", "D.4776", "D.477", "D.55", "D.4499", "D.4710", "D.42", "D.4652", "D.480", "D.4004", "D.4838", "D.812", "D.4637", "D.475", "D.4284", "D.4218", "D.356", "D.4009", "D.4644", "D.4083",   "D.54", "D.4676",  "D.48", "D.4002", "D.488", "D.2006", "D.472", "D.4015", "D.470", "D.468", "D.3994", "D.58", "D.483", "D.49", "D.469")
 
-DBN <- build.downscalingBN(local, global, mode = 50, bnlearning.algorithm = "hc.local", 
+DBN <- build.downscalingBN(local, global, mode = 70, bnlearning.algorithm = "hc.local", 
                            ncategories = 5,
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           #clustering.args.list = list(k = 12, family = kccaFamily("kmedians") ), 
+                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            #bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
-                           bnlearning.args.list = list(distance = 3),
+                           bnlearning.args.list = list(distance = 18),
                            param.learning.method = "bayes")
 
 plot.DBN( DBN, dev=TRUE , nodes = c(28))
@@ -144,13 +143,10 @@ mibl <- lm( y ~ x , mib )
 dev.new()
 plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
 points(b[1, ], b[2, ], col = "blue")
-points(c[1, ], c[2, ], col = "green")
+#points(c[1, ], c[2, ], col = "green")
 points(d[1, ], d[2, ], col = "red")
 
 abline(mial)
 abline(mibl, col = "blue")
-
-
-points(c[1, ], c[ 2, ], col =  "red")
-abline(micl, col = "red")
-legend(c("Observations", ))
+abline(midl, col = "red")
+#legend(c("Observations", ))
