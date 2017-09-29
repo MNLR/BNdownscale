@@ -18,28 +18,24 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #              NaNs are not expected when categorization is to be done, modes *0 and *2
   # local    predictands. Expects categorical data. 
   #              NaNs will be processed
-  # mode     10: Clustering will be performed for each global (predictor) node separately
-  #          20: Clustering will be performed for each global (predictor) node separately. Arcs between global nodes will not be allowed
-  #          30: Clustering will be performed for all the global nodes at the same time, condensing the "atmosphere status"
-  #               in a single node which will be represented above the grid.
-  #          40: Clustering will be performed for each global (predictor) node and each variable separately
-  #          50: Clustering will be performed for each global (predictor) node and each variable separately. Arcs between global nodes will not be allowed
-  #          60: Double-step process.
-  #          70: Double-step process. Arcs between global nodes will not be allowed.
-  #                 clustering.args.list is pased to flexclust::kcca() function. Check its arguments. By default K-Means algorithm is used. 
-  #          11: No categorization will be performed, use when global data is categorical.
-  #          21: No categorization will be performed, use when global data is categorical. Arcs between global nodes will not be allowed.
-  #          12: Simple categorization will be performed. 
-  #          22: Simple categorization will be performed.  Arcs between global nodes will not be allowed
-  #          62: Double-step process.
-  #          72: Double-step process. Arcs between global nodes will not be allowed.
-  #           Especify ncategories.
-  #               For modes 60,70,62,72 bnlearning.algorithm and bnlearning.args.list are passed to the first
-  #               learning. If  bnlearning.algorithm2 and bnlearning.args.list2 are not specified the former will be used
-  #               Caution with the blacklist and whitelist arguments and input coherent pairs.
+  # mode     A 2 digit number XY where:
+  #            Y is the global categorization mode. Admits:
+  #              0:   Clustering will be performed for each global (predictor) node separately. 
+  #              1:   No categorization will be performed, use when global data is categorical.
+  #              2:   Simple categorization.
+  #              3:   Proportional categorization. E.g. 4 categories performs categorization using the 4 cuartiles
+  #            X is the overall mode:
+  #              1:   Arcs between global nodes are allowed.
+  #              2:   Arcs between global nodes are forbidden. 
+  #              3:   Nodes will be condensed into the "atmosphere status", a single node which will be represented above the grid. Only valid when Y = 0.
+  #              4,5: Same as modes 1,2 respectivelly, but each node variable will be consider a separate node, in the same position. Only valid when Y = 0.
+  #              6,7: Double step process, global injection will be performed as mode 1,2 respectivelly. Invalid when Y = 1. 
+  #                   bnlearning.algorithm and bnlearning.args.list are passed to the first learning process.
+  #                   If  bnlearning.algorithm2 and bnlearning.args.list2 are not specified the former will be used.
+  #                   Caution with the blacklist and whitelist arguments and input coherent pairs.
   # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
   # output.marginals        Compute and output Marginal Probability distribution Tables. 
-  
+  print("Preprocessing data...")
   if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character") }
   
   if (substr(bnlearning.algorithm, nchar(bnlearning.algorithm)-5+1, nchar(bnlearning.algorithm)) == "local"){ 
@@ -69,8 +65,8 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     clusterS <- NULL
     clustering.attributes <- NULL 
   }
-  else if (mode2 == "2"){
-    gcat <- categorize.bn(global, mode = mode, ncategories = ncategories)
+  else if (mode2 == "2" | mode2 == "3"){
+    gcat <- categorize.bn(global, mode = as.numeric(mode2), ncategories = ncategories)
     global$Data <- gcat[[1]]
     clustering.attributes <- gcat[[2]] 
     data <- preprocess(local, global, rm.na = TRUE , rm.na.mode = "observations" ) 
@@ -83,7 +79,6 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
       positions.done <- TRUE
       xyCoords <- p.global[[2]]
       p.global <- p.global[[1]]
-      print(p.global)
       clustering.attributes <- NULL
     } else { positions.done <- FALSE }
 
@@ -134,7 +129,6 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
 
       global.data <- sapply(clusterS, predict) # matrix of data where each column is a node with its "climate value" per observation
       global.data <- matrix(as.factor(global.data), ncol = NCOL(global.data))
-      print(global.data)
       print("Done.")
       if ( !(positions.done) ){
         if ( !(is.null(attr(global$Data, "dimensions"))) ){ # MultiGrid or one global dataset
@@ -175,7 +169,6 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   bnlearning.args.list[["x"]] <- data[[1]]
 
   print("Building Bayesian Network...")
-  print(bnlearning.args.list)
   alg <- strsplit(bnlearning.algorithm, split = ".", fixed = TRUE)[[1]][1]
   if ( (alg != "hc")  & (alg != "tabu") ) { # constraint-based algorithms allow parallelization
     if ( parallelize & is.null(cl) ) { # initialize cluster if it is not already
@@ -200,6 +193,8 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     if (paste0(mode_[1], mode_[2]) == "70") {mode_2 <- 20}
     if (paste0(mode_[1], mode_[2]) == "62") {mode_2 <- 12}
     if (paste0(mode_[1], mode_[2]) == "72") {mode_2 <- 22}
+    if (paste0(mode_[1], mode_[2]) == "63") {mode_2 <- 13}
+    if (paste0(mode_[1], mode_[2]) == "73") {mode_2 <- 23}
     if (is.null(bnlearning.algorithm2) ){ bnlearning.algorithm2 <- bnlearning.algorithm} 
     if (is.null( bnlearning.args.list2 ) ){ bnlearning.args.list2 <- bnlearning.args.list}
     

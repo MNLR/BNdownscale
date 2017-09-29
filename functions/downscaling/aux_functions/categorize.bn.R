@@ -1,9 +1,7 @@
 categorize.bn <- function( data , mode , ncategories, breaks.list = NULL ){
-  
-  global.p <- preprocess.forKmeans(data, mode = mode, scale_ = FALSE)
-  
-  if (mode == 1 | mode == 2){
-    if ( (is.null(breaks.list)) ){
+  global.p <- preprocess.forKmeans(data, mode = 1, scale_ = FALSE) #mode is irrelevant here
+  if ( is.null(breaks.list) ){
+    if (mode == 2){
       breaks.list <- lapply( global.p, 
                             function(node) return( apply(node, 
                                               MARGIN = 2,
@@ -20,9 +18,18 @@ categorize.bn <- function( data , mode , ncategories, breaks.list = NULL ){
                                                 )
                             )
     
-    }
+    } else if (mode == 3) { # by whatever-tile
+      breaks.list <- lapply(global.p, function(x) return(sapply(x, 
+                                                                function(var, ncategories) {
+                                                                  break.lims <- quantile(var, 
+                                                                                         seq(0 + 1/ncategories, 1-1/ncategories,length.out = ncategories-1))
+                                                                  return(c(-Inf, break.lims, Inf))
+                                                                },
+                                                                ncategories = ncategories) ) )
+    } else { stop("This is not supported!") }
+  }
 
-    categorized <- mapply( function( node, breaks ) {
+  categorized <- mapply( function( node, breaks ) {
       nodevars <- split( as.matrix(node) , col(node) )
       breakvars <- split( breaks , col(breaks) )
       return( interaction(as.data.frame( mapply( function(var, break_) cut(var, break_) , nodevars, breakvars , SIMPLIFY = TRUE )) ) )
@@ -31,9 +38,5 @@ categorize.bn <- function( data , mode , ncategories, breaks.list = NULL ){
     breaks.list  )
 
   return( list(categorized, breaks.list) ) 
-  }
-  else {
-    stop("This is not supported!")
-  }
 }
 

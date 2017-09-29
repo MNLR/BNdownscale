@@ -50,7 +50,7 @@ downscale.BN <- function(downscale.BN, global,
     if (mode2 == "1"){   # data is expected categorized
       clustered <- as.matrix(preprocess(global)[[1]]) 
     } 
-    else { clustered  <- categorize.bn( global, mode, NULL , clustering.attributes )[[1]] }  # easy-categorization
+    else { clustered  <- categorize.bn( global, as.numeric(mode2), NULL , clustering.attributes )[[1]] }  # easy-categorization
   }
   else{
     p.global <- preprocess.forKmeans(global, oldmode, scale.args = clustering.attributes,
