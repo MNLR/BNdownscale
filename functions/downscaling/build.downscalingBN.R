@@ -43,7 +43,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   } else {is.local <- FALSE}
   
   mode_ <- strsplit(as.character(mode), "")[[1]]
-  if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22")}
+  if (length(mode_) != 2 | (mode == "13" )) {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22, 13, 23, 40, 50, 60, 70, 62, 72, 63, 73")}
   mode <- as.numeric(mode_[1])
   mode2 <- mode_[2]
   cl <- NULL
@@ -139,7 +139,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
         }
       }
     }
-    else {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22")}
+    else {stop("Invalid mode. Accepted modes are 10, 20, 30, 11, 21, 12, 22, 13, 23, 40, 50, 60, 70, 62, 72, 63, 73")}
     data <- preprocess(local, list(Data = global.data, xyCoords = xyCoords), rm.na = TRUE , rm.na.mode = "observations" )
     Nglobals <- NCOL(global.data)
   }

@@ -40,11 +40,11 @@ local$Data[ local$Data >= 1] <-  1
 
 global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd")
 
-DBN <- build.downscalingBN(local, global, mode = 50, bnlearning.algorithm = "hc.local", 
+DBN <- build.downscalingBN(local, global, mode = 30, bnlearning.algorithm = "hc.local", 
                            ncategories = 4,
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
+                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            #bnlearning.args.list = list(distance = 6, alpha = 0.01, debug = TRUE),
                            bnlearning.args.list = list(distance = 5),
                            param.learning.method = "bayes")
