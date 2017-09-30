@@ -15,7 +15,7 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
   #              Can be categorical or continuous. See mode
   #              2 coordinate postions are expected. 
-  #              NaNs are not expected when categorization is to be done, modes *0 and *2
+  #              NaNs are not expected when categorization, using quantiles, is to be done, modes *0 and *2
   # local    predictands. Expects categorical data. 
   #              NaNs will be processed
   # mode     A 2 digit number XY where:
@@ -65,7 +65,13 @@ build.downscalingBN <- function(local, global, mode = 12, bnlearning.algorithm =
     clusterS <- NULL
     clustering.attributes <- NULL 
   }
-  else if (mode2 == "2" | mode2 == "3"){
+  else if (mode2 == "2" | mode2 == "3" ){
+    if (mode == 4 | mode == 5){ 
+      if ( mode2 == "2" ) {mode2 <- "4"}
+      if ( mode2 == "3" ) {mode2 <- "5"}  
+    }
+    if ( mode == 4) { mode <- 1 }
+    if ( mode == 5) { mode <- 2 }
     gcat <- categorize.bn(global, mode = as.numeric(mode2), ncategories = ncategories)
     global$Data <- gcat[[1]]
     clustering.attributes <- gcat[[2]] 
