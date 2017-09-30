@@ -2,6 +2,7 @@ source("functions/generalaux/preprocess.one.R")
 
 preprocess <- function(observations, global = NULL,  rm.na = TRUE , rm.na.mode = "auto", rm.na.observations.tol = 2,  rm.na.stations.tol = 2  ) {
   # preprocess transformeR data given as global and observations
+
   if (is.null(global)){ 
     if (class(observations$xyCoords) == "matrix" | class(observations$xyCoords) == "data.frame" ){
       auxdata <- preprocess.one(observations, rownames(observations$xyCoords) )
@@ -71,5 +72,5 @@ preprocess <- function(observations, global = NULL,  rm.na = TRUE , rm.na.mode =
     if (rc != 0){ print(paste0("Removed ", rc , " stations.")) }
     if (rr != 0){ print(paste0("Removed ", rr , " observations." ))}
   }
-  return( list(data , positions ) )
+  return( list(data = data , positions = positions ) )
 }

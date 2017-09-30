@@ -10,14 +10,6 @@ library(sfsmisc)
 
 source("functions/downscaling/build.downscalingBN.R")
 source("functions/downscaling/downscale.BN.R")
-source("functions/local.bnlearning/hc.local.R")
-source("functions/local.bnlearning/tabu.local.R")
-source("functions/local.bnlearning/gs.local.R")
-source("functions/local.bnlearning/iamb.local.R")
-source("functions/local.bnlearning/fast.iamb.local.R")
-source("functions/local.bnlearning/inter.iamb.local.R")
-source("functions/local.bnlearning/mmpc.local.R")
-source("functions/local.bnlearning/si.hilton.pc.local.R")
 source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/marginals.R")
 source("functions/validation/c.table.R")
@@ -40,16 +32,25 @@ local$Data[ local$Data >= 1] <-  1
 
 global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd")
 
-DBN <- build.downscalingBN(local, global, mode = 30, bnlearning.algorithm = "hc.local", 
-                           ncategories = 4,
+DBN <- build.downscalingBN(local, global, categorization.type = "varsEven",
+                           forbid.global.arcs = TRUE,
+                           forbid.local.arcs = FALSE,
+                           bnlearning.algorithm = "tabu", 
+                           ncategories = 5,
+                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                           #bnlearning.args.list = list(distance = 6, alpha = 0.01, debug = TRUE),
-                           bnlearning.args.list = list(distance = 5),
-                           param.learning.method = "bayes")
+                           #bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
+                           #bnlearning.args.list = list(distance = 4, debug = TRUE),
+                           param.learning.method = "bayes",
+                           two.step = FALSE,
+                           return.first = TRUE,
+                           bnlearning.algorithm2 = "hc.local",
+                           bnlearning.args.list2 = list(distance = 3, debug = TRUE) 
+                           )
 
-plot.DBN( DBN, dev=TRUE  , edge.arrow.size = 0.25, node.size = 0)
+plot.DBN( DBN, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)
+
 arc.strength(DBN$BN, DBN$training.data, criterion = "mi")
 
 test <- subsetGrid(global, years = c(1991, 1992, 1993) )

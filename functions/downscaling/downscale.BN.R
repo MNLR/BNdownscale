@@ -1,4 +1,3 @@
-source("functions/downscaling/aux_functions/preprocess.forKmeans.R")
 source("functions/downscaling/aux_functions/categorize.bn.R")
 source("functions/downscaling/aux_functions/predict.DBN.R")
 
@@ -22,94 +21,62 @@ downscale.BN <- function(downscale.BN, global,
   BN <- downscale.BN$BN
   BN.fit <- downscale.BN$BN.fit
   clusterS <- downscale.BN$clusterS
-  mode_ <- downscale.BN$mode
-  mode <- as.numeric(mode_[1])
-  mode2 <- mode_[2]
+  categorization.type <- downscale.BN$categorization.type
+
   Nglobal <- downscale.BN$Nglobals
   predictors <- names(BN$nodes)[1:Nglobal]
   predictands <- names(BN$nodes)[- (1:Nglobal) ]
-  clustering.attributes <- downscale.BN$clustering.attributes
-  oldmode <- mode
+  categorization.attributes <- downscale.BN$categorization.attributes
   
-  if ((mode == 4) | (mode == 5)) {
-    scale_ <- FALSE 
-    only.nodes <- TRUE
-    if (mode == 4) {mode <- 1}
-    if (mode == 5) {mode <- 2}
-  } else {
-    scale_ <- TRUE
-    only.nodes <- NULL
-  }
+  if (categorization.type != "no"){
+    print("Categorizing data...")
+    categorized <- categorize.bn(global, type = categorization.type, cat.args = categorization.attributes,
+                                ncategories = NULL,
+                                clustering.args.list = NULL, 
+                                clusterS = clusterS,
+                                parallelize = parallelize, cluster.type = cluster.type, n.cores = n.cores,
+                                training.phase = FALSE)
+    if (categorization.type == "atmosphere"){categorized <- as.matrix(categorized)}
+    print("Done...")
+  } else { categorized <- as.matrix(preprocess( global, rm.na = TRUE, rm.na.mode = "observations")[[1]]) }
   
   print("Compiling junction...")
   junction <- compile( as.grain(BN.fit) )
   print("Done.")
-    
+  
   print("Propagating evidence and computing Probability Tables...")
-  if (is.null(clusterS)){
-    if (mode2 == "1"){   # data is expected categorized
-      clustered <- as.matrix(preprocess(global)[[1]]) 
-    } 
-    else { clustered  <- categorize.bn( global, as.numeric(mode2), NULL , clustering.attributes )[[1]] }  # easy-categorization
-  }
-  else{
-    p.global <- preprocess.forKmeans(global, oldmode, scale.args = clustering.attributes,
-                                     scale_ = scale_, only.nodes = only.nodes)
-  }
   if ( parallelize == TRUE) {
     if ( is.null(n.cores) ){
-      n.cores <- floor(detectCores()/2)
+      n.cores <- floor(detectCores()-1)
     }
     # Initiate cluster
-    cl <- makeCluster(n.cores, type = cluster.type )
+    cl <- makeCluster( n.cores, type = cluster.type )
     if (cluster.type == "PSOCK") {
       clusterExport(cl, list("setEvidence", "querygrain" , "predict.DBN") , envir = environment())
-      clusterExport(cl, list( "junction", "predictors" , "predictands") , envir = environment() )
+      clusterExport(cl, list( "junction", "predictors" , "predictands", "categorized") , envir = environment())
     }
-    if (mode == 3) {
-      clustered <-  predict(clusterS, newdata = p.global) 
-      if (cluster.type == "PSOCK") {
-        clusterExport(cl, "clustered" , envir = environment() )
-      }
-      PT <- parLapply(cl , clustered, fun =  predict.DBN , predictors = predictors, junction = junction , predictands = predictands )
-    }
-    else if (mode == 1 | mode == 2){
-      if (!(is.null(clusterS))){
-        clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
-      }
-
-      if (cluster.type == "PSOCK") {
-        clusterExport(cl, "clustered" , envir = environment() )
-      }
-      PT <- parApply(cl , clustered, MARGIN = 1 , FUN = predict.DBN , predictors = predictors, junction = junction , predictands = predictands )
-    }
-    stopCluster(cl)
-  }  
-  else{ # Do not parallelize
-    if (mode == 3) {
-      clustered <-  predict(clusterS, newdata = p.global) 
-      PT <- lapply(clustered, FUN = predict.DBN , predictors = predictors, junction = junction, predictands = predictands )
-    }
-    else if (mode == 1 | mode == 2){
-      if (!(is.null(clusterS))){
-        clustered <- mapply(predict , object = clusterS, newdata = p.global ,  SIMPLIFY = TRUE  ) # matrix of data where each column is a node with its "climate value" per observation
-      }  
-      PT <- apply(clustered, MARGIN = 1 , FUN = predict.DBN , predictors = predictors, 
-                  junction = junction , predictands = predictands )
-    }
+    PT <- parApply(cl, categorized, MARGIN = 1, FUN = predict.DBN, 
+                   predictors = predictors, junction = junction , predictands = predictands )
+  }
+  else { # Do not parallelize
+    PT <- apply(categorized, MARGIN = 1, FUN =  predict.DBN,
+                predictors = predictors, junction = junction , predictands = predictands )
   }
   print("Done.")
   
-  if ( prediction.type == "probabilities.list" ) { 
+  if ( prediction.type == "probabilities.list" ) {
     return(PT) 
   }
-  else if ( prediction.type == "event" & ( !(is.null(DBN$marginals)) | !(is.null(threshold.vector)) ) ){
-    if (is.null(threshold.vector)){ threshold.vector  <- 1 - DBN$marginals[event, ] }
-    return( is.mostLikely(downscaled, event = event, threshold.vector =  threshold.vector) )
-  } 
   else {
     downscaled <- aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2))
-    return( downscaled[,,match(predictands, colnames(downscaled[1,,]))] )
+    PT <- downscaled[,,match(predictands, colnames(downscaled[1,,]))] 
+    if ( prediction.type == "event" & ( !(is.null(downscale.BN$marginals)) | !(is.null(threshold.vector)) ) ){
+      if (is.null(threshold.vector)){ threshold.vector  <- 1 - downscale.BN$marginals[event, ] }
+      return( is.mostLikely(PT, event = event, threshold.vector =  threshold.vector) )
+    }
+    else {
+      return(PT)
+    }
   }
 }
 

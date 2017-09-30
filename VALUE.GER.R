@@ -10,14 +10,6 @@ library(sfsmisc)
 
 source("functions/downscaling/build.downscalingBN.R")
 source("functions/downscaling/downscale.BN.R")
-source("functions/local.bnlearning/hc.local.R")
-source("functions/local.bnlearning/tabu.local.R")
-source("functions/local.bnlearning/gs.local.R")
-source("functions/local.bnlearning/iamb.local.R")
-source("functions/local.bnlearning/fast.iamb.local.R")
-source("functions/local.bnlearning/inter.iamb.local.R")
-source("functions/local.bnlearning/mmpc.local.R")
-source("functions/local.bnlearning/si.hilton.pc.local.R")
 source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/marginals.R")
 source("functions/validation/c.table.R")
@@ -56,21 +48,24 @@ ct.REA
 rates.REA <- c.table.rates(ct.REA, "all")
 rates.REA
 
-
 test <- subsetGrid(global, years = c(1991), season = c(2))
 real <- subsetGrid(local,  years = c(1991), season = c(2))
 
-#from <- array("G.Atmosphere", 53)
-#to <-  c("D.3987", "D.47", "D.2760", "D.2761", "D.4297", "D.51", "D.4472", "D.4669", "D.4079", "D.52", "D.4572", "D.4007", "D.3991", "D.4882", "D.4074", "D.4187", "D.4617",  "D.4954", "D.4014", "D.4776", "D.477", "D.55", "D.4499", "D.4710", "D.42", "D.4652", "D.480", "D.4004", "D.4838", "D.812", "D.4637", "D.475", "D.4284", "D.4218", "D.356", "D.4009", "D.4644", "D.4083",   "D.54", "D.4676",  "D.48", "D.4002", "D.488", "D.2006", "D.472", "D.4015", "D.470", "D.468", "D.3994", "D.58", "D.483", "D.49", "D.469")
-
-DBN <- build.downscalingBN(local, global, mode = 30, bnlearning.algorithm = "hc.local", 
-                           ncategories = 5,
+DBN <- build.downscalingBN(local, global, categorization.type = "nodesEven",
+                           forbid.global.arcs = TRUE,
+                           forbid.local.arcs = FALSE,
+                           bnlearning.algorithm = "gs", 
+                           ncategories = 4,
+                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
-                           #bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
-                           bnlearning.args.list = list(distance = 1.5),
-                           param.learning.method = "bayes")
+                           bnlearning.args.list = list(test = "mc-mi"),
+                           param.learning.method = "bayes",
+                           two.step = TRUE,
+                           return.first = TRUE,
+                           bnlearning.algorithm2 = "hc.local",
+                           bnlearning.args.list2 = list(distance = 3)
+                          )
 
 plot.DBN( DBN, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
 score(DBN$BN, DBN$training.data )
