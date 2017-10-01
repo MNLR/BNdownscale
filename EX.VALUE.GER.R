@@ -51,15 +51,15 @@ rates.REA
 test <- subsetGrid(global, years = c(1991), season = c(2))
 real <- subsetGrid(local,  years = c(1991), season = c(2))
 
-DBN <- build.downscalingBN(local, global, categorization.type = "nodeEven",
+DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "hc.local", 
+                           bnlearning.algorithm = "hc", 
                            ncategories = 4,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           bnlearning.args.list = list(distance = 3),
+                          # bnlearning.args.list = list(distance = 3),
                           #bnlearning.args.list = list(test = "mc-mi"),
                            param.learning.method = "bayes",
                            two.step = FALSE,
@@ -115,16 +115,16 @@ c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
 ###   Mutual Information
 ###
 
-# Predictions:
-prediction.p <- local
-prediction.p$Data <- prediction
-
-attr(prediction.p$Data, 'dim') <- attributes(real$Data)$dim
-attr(prediction.p$Data, 'dimensions') <- attributes(real$Data)$dimensions
+distance.bias(local, prediction, plot_ = TRUE)
 
 d <- MI.vs.distance(prediction.p)
-mid <- data.frame(y = d[ 2, ], x = d[ 1, ])
-midl <- lm( y ~ x , mid )
+a <- MI.vs.distance(local)
+
+dev.new()
+plot(a$dist, a$mi, col="black")
+lines(aloes, col = "black")
+points(d$dist, d$mi, col = "blue")
+lines(dloes, col = "blue")
 
 # 
 a <- MI.vs.distance(local)

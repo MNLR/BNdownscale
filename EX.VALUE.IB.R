@@ -65,7 +65,6 @@ downscaled <- downscale.BN(DBN , test , parallelize = TRUE ,  n.cores = 7, predi
 MPT <- DBN$marginals
 P_1 <- MPT["1", ]
 
-
 prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
 ct <- c.table(prediction, real$Data)
 ct

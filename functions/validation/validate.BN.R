@@ -5,9 +5,10 @@ source("functions/validation/auc.DBN.R")
 source("functions/validation/MI.vs.distance.R")
 source("functions/downscaling/aux_functions/is.mostLikely.R")
 source("functions/validation/c.table.rates.R")
+source("functions/validation/distance.bias.R")
 
 validate.BN <- function( year.fold, progress.count, progress.length, 
-                     local, global, plot.aucS, plot.MI,
+                     local, global, plot.aucS, plot.MI, mi.threshold = 0.3,
                      categorization.type = "nodeSimple", 
                      forbid.global.arcs = TRUE, forbid.local.arcs = FALSE,
                      ncategories = 3,
@@ -62,32 +63,23 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                   realData = testD$Data, 
                   plot.curves = plot.aucS, points = 100)
   
+  # Frecuency ratio:
+  FRatio <- (table(prediction)["1"])/(table(testD$Data)["1"])
+  #
   
-  prediction.p <- testD
-  prediction.p$Data <- prediction
+  # MI vs Distance test
+  annual <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+                          only.bias = TRUE, season = "annual")
+  DJF <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+                                 only.bias = TRUE, season = "DJF")
+  MAM <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+                              only.bias = TRUE, season = "MAM")
+  JJA <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+                              only.bias = TRUE, season = "JJA")
+  SON <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+                              only.bias = TRUE, season = "SON")
   
-  attr(prediction.p$Data, 'dim') <- attributes(testD$Data)$dim
-  attr(prediction.p$Data, 'dimensions') <- attributes(testD$Data)$dimensions
-  # 
-  a <- NULL
-  d <- NULL
+  d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
   
-  # a <- MI.vs.distance(testD) 
-  # d <- MI.vs.distance(prediction.p)
-  #mid <- data.frame(y = d[ 2, ], x = d[ 1, ])
-  #midl <- lm( y ~ x , mid )
-  #mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
-  #mial <- lm( y ~ x , mia )
-  
-  if (plot.MI) {
-    plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
-    points(d[1, ], d[2, ], col = "red")
-    abline(mial)
-    abline(midl, col = "red")
-  }
-  
-  return(list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS,
-              MI = list(real = a, predicted = d) ) 
-  )
-  
+  return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
 }
