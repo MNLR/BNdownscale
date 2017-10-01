@@ -1,5 +1,6 @@
 source("functions/downscaling/aux_functions/categorize.bn.R")
 source("functions/downscaling/aux_functions/add.toBlacklist.R")
+source("functions/downscaling/marginals.R")
 source("functions/local.bnlearning/hc.local.R")
 source("functions/local.bnlearning/tabu.local.R")
 source("functions/local.bnlearning/gs.local.R")
@@ -87,8 +88,8 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
       bnlearning.args.list <- add.toBlacklist(globalNodeNames, bnlearning.args.list)
     }
     if (forbid.local.arcs){
-      globalNodeNames <- colnames(data[[1]][ , (Nglobals+1):NCOL(data[[1]]) ])
-      bnlearning.args.list <- add.toBlacklist(globalNodeNames, bnlearning.args.list)
+      localNodeNames <- colnames(data[[1]][ , (Nglobals+1):NCOL(data[[1]]) ])
+      bnlearning.args.list <- add.toBlacklist(localNodeNames, bnlearning.args.list)
     }
     print("Done.")
   }

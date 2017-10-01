@@ -1,7 +1,7 @@
 source("functions/downscaling/aux_functions/categorize.byInterval.R")
 
 categorize.bn <- function(global, type, training.phase, cat.args = NULL, ncategories, clustering.args.list, clusterS, parallelize, cluster.type, n.cores ) {
-  if (!(is.character(type))){ stop("Enter a valid categorization.type: \"no\", ")}
+  if (!(is.character(type))){ stop("Enter a valid categorization.type: \"no\", \"nodeClustering\", \"varsClustering\", \"nodeSimple\", \"varsSimple\", \"nodeEven\", \"varsEven\", \"atmosphere\".")}
   
   if (type == "atmosphere"){
     global.processed <- preprocess.forCategorization(global, agg = "atmosphere", training.phase = training.phase, 
@@ -23,8 +23,10 @@ categorize.bn <- function(global, type, training.phase, cat.args = NULL, ncatego
   else {
     agg <- substr(type, 1, 4)
     cattype <- substr(type, 5, nchar(type))
-    if (cattype != "Clustering" & cattype != "Simple" & cattype != "Even")  {stop("Enter a valid categorization.type: \"no\", ")}
-    if (agg != "node" & agg != "vars")  {stop("Enter a valid categorization.type: \"no\", ")}
+    if (cattype != "Clustering" & cattype != "Simple" & cattype != "Even")  {stop("Enter a valid categorization.type: \"no\", \"nodeClustering\", \"varsClustering\", \"nodeSimple\", \"varsSimple\", \"nodeEven\", \"varsEven\", \"atmosphere\".")}
+    if (agg != "node" & agg != "vars")  {
+      stop("Enter a valid categorization.type: \"no\", \"nodeClustering\", \"varsClustering\", \"nodeSimple\", \"varsSimple\", \"nodeEven\", \"varsEven\", \"atmosphere\".")
+    }
     
     if (cattype == "Simple" | cattype == "Even"){
         global.processed <- categorize.byInterval(global, 
@@ -67,7 +69,6 @@ categorize.bn <- function(global, type, training.phase, cat.args = NULL, ncatego
         }
         else {
           cl <- NULL
-          #clusterS1 <- mapply(kcca, p.global, MoreArgs =   clustering.args.list, SIMPLIFY = FALSE)   #### equivalent to:
           clusterS <- lapply(global.data.processed, 
                              function(node, cal) return( do.call(kcca, append( list( x = node), cal ) ) ), 
                              cal = clustering.args.list)

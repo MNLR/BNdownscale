@@ -1,7 +1,7 @@
 source("functions/downscaling/aux_functions/preprocess.forCategorization.R")
 
 categorize.byInterval <- function( data, cattype, agg, ncategories, training.phase = TRUE, breaks.list = NULL){
-  global.p <- preprocess.forCategorization(global, agg = agg, scale_ = FALSE, training.phase = training.phase) 
+  global.p <- preprocess.forCategorization(data, agg = agg, scale_ = FALSE, training.phase = training.phase) 
   if (cattype == "Simple"& agg == "node") { mode <- 2}
   if (cattype == "Even" & agg == "node") { mode <- 3}
   if (cattype == "Simple" & agg == "vars") { mode <- 4}
