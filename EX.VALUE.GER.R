@@ -51,17 +51,18 @@ rates.REA
 test <- subsetGrid(global, years = c(1991), season = c(2))
 real <- subsetGrid(local,  years = c(1991), season = c(2))
 
-DBN <- build.downscalingBN(local, global, categorization.type = "nodesEven",
+DBN <- build.downscalingBN(local, global, categorization.type = "nodeEven",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "gs", 
+                           bnlearning.algorithm = "hc.local", 
                            ncategories = 4,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           bnlearning.args.list = list(test = "mc-mi"),
+                           bnlearning.args.list = list(distance = 3),
+                          #bnlearning.args.list = list(test = "mc-mi"),
                            param.learning.method = "bayes",
-                           two.step = TRUE,
+                           two.step = FALSE,
                            return.first = TRUE,
                            bnlearning.algorithm2 = "hc.local",
                            bnlearning.args.list2 = list(distance = 3)

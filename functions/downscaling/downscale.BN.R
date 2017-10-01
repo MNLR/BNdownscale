@@ -57,6 +57,7 @@ downscale.BN <- function(downscale.BN, global,
     }
     PT <- parApply(cl, categorized, MARGIN = 1, FUN = predict.DBN, 
                    predictors = predictors, junction = junction , predictands = predictands )
+    stopCluster(cl)
   }
   else { # Do not parallelize
     PT <- apply(categorized, MARGIN = 1, FUN =  predict.DBN,
