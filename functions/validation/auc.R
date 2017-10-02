@@ -7,16 +7,16 @@ auc <- function(probabilities, real, event = 1, not.event = 0,  points = 1000, p
                       FUN =  function( threshold , probabilities) return(as.numeric(probabilities >= threshold)), 
                       probabilities = probabilities )
   
-  if (event != 1){ 
-    real[real == event] <- 1 
+  if (event != 1){
+    real[real == event] <- 1
     occurence[occurence == event ] <- 1
   }
   if (not.event != 0) {
     real[real == not.event] <- 0
     occurence[occurence == not.event ] <- 0
-  } 
+  }
   ctables <- lapply( occurence ,  c.table, real = real)
-  
+
   roc.xvalues <- rev( sapply( ctables, c.table.rates, value = "FPR" ) )
   roc.yvalues <- rev( sapply( ctables, c.table.rates, value = "TPR" ) )
   

@@ -56,8 +56,8 @@ plot.DBN( DBN, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0
 
 arc.strength(DBN$BN, DBN$training.data, criterion = "mi")
 
-test <- subsetGrid(global, years = c(1991, 1992, 1993) )
-real <- subsetGrid(local, years =  c(1991, 1992, 1993)  )
+test <- subsetGrid(global, years = c(1991) )
+real <- subsetGrid(local, years =  c(1991)  )
 
 test <- global
 real <- local
@@ -95,6 +95,15 @@ c.table.rates(ct1, "all")
 
 ###
 ###    Mutual Information
+###
+###
+
+
+dev.new()
+distance.bias(real, prediction, season = "DJF", dimFix = TRUE, plot_ = TRUE)
+
+
+###
 ###
 ###
 

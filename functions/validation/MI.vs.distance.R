@@ -10,11 +10,15 @@ MI.vs.distance <- function(stationObj, predictionObj = NULL, returnmmat = FALSE,
   if (dimFix){
     stationObj <- R.VALUE:::dimFix(stationObj)
   }
+  
   mmat <- miMat.VALUE( stationObj = stationObj, predictionObj = predictionObj,
                        season = season, aggr.type = aggr.type, 
                        prob = prob, threshold = threshold,
-                       max.na.prop = max.na.prop )
-  if (!returnmmat){
+                       max.na.prop = 1 )
+  if (returnmmat){
+    return(mmat)
+  }
+  else {
     x <- attributes(mmat[[1]])$lon
     y <- attributes(mmat[[1]])$lat
     xycoords <- matrix( c(x,y), byrow = TRUE , nrow = 2 )
@@ -25,5 +29,4 @@ MI.vs.distance <- function(stationObj, predictionObj = NULL, returnmmat = FALSE,
   
     return( return( list( dist = c(dm), mi = c(mmat[[1]]) ) ) )
   }
-  else{ return(mmat) }
 }

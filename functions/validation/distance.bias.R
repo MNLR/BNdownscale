@@ -10,12 +10,13 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
   
   real.mvd <- MI.vs.distance(real, season = c(season), dimFix = dimFix)
   predicted.mvd <- MI.vs.distance(prediction.p, season = c(season), dimFix = dimFix)
+  
+
   # REAL
   D <- data.frame(mi=unlist(real.mvd$mi), dist=unlist(real.mvd$dist))
   smf <- loess(mi ~ dist, D)
   rx <- seq(min(D$dist, na.rm = TRUE),max(D$dist, na.rm = TRUE),length.out=10000)
   ry <- predict(smf, rx)
-  
   # PREDICTS
   D <- data.frame(mi=unlist(predicted.mvd$mi), dist=unlist(predicted.mvd$dist))
   smf <- loess(mi ~ dist, D)
@@ -26,6 +27,7 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
   cutp <- which(py >= threshold)[length(which(py >= threshold))]
   bias <- px[cutp] - px[cutr]
   
+  print(bias)
   if (plot_) {
     plot(px, py, col = "red",  xlab = "Distance", ylab = "Mutual Information")
     points(rx, ry)

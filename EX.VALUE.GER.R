@@ -48,8 +48,8 @@ ct.REA
 rates.REA <- c.table.rates(ct.REA, "all")
 rates.REA
 
-test <- subsetGrid(global, years = c(1991), season = c(2))
-real <- subsetGrid(local,  years = c(1991), season = c(2))
+test <- subsetGrid(global, years = c(1979))
+real <- subsetGrid(local,  years = c(1979))
 
 DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            forbid.global.arcs = TRUE,
@@ -59,14 +59,14 @@ DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                          # bnlearning.args.list = list(distance = 3),
-                          #bnlearning.args.list = list(test = "mc-mi"),
+                           #bnlearning.args.list = list(distance = 3),
+                           #bnlearning.args.list = list(test = "mc-mi"),
                            param.learning.method = "bayes",
                            two.step = FALSE,
                            return.first = TRUE,
                            bnlearning.algorithm2 = "hc.local",
                            bnlearning.args.list2 = list(distance = 3)
-                          )
+                           )
 
 plot.DBN( DBN, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
 score(DBN$BN, DBN$training.data )
@@ -78,7 +78,7 @@ downscaled <- downscale.BN(DBN , test, parallelize = TRUE,  n.cores = 7)
 
 MPT <-DBN$marginals
 P_1 <- MPT["1", ]
-prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1- P_1)
+prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
 ct <- c.table(prediction, real$Data)
 ct
 rates <- c.table.rates(ct, "all")

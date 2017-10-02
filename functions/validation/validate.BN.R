@@ -8,7 +8,8 @@ source("functions/validation/c.table.rates.R")
 source("functions/validation/distance.bias.R")
 
 validate.BN <- function( year.fold, progress.count, progress.length, 
-                     local, global, plot.aucS, plot.MI, mi.threshold = 0.3,
+                     local, global, plot.aucS, plot.MI, 
+                     mi.threshold = 0.3,
                      categorization.type = "nodeSimple", 
                      forbid.global.arcs = TRUE, forbid.local.arcs = FALSE,
                      ncategories = 3,

@@ -15,8 +15,11 @@ year.folds.list <- list(seq(1979, 1984),
                         seq(1991, 1996), 
                         seq(1997, 2002), 
                         seq(2003, 2008))
+year.folds.list <- list(c(1979), 
+                        c(1985))
 plot.aucS <- FALSE
 plot.MI <- TRUE
+mi.threshold <- 0.3
 BNB.args.list <- list( categorization.type = "nodeEven",
                  forbid.global.arcs = TRUE,
                  forbid.local.arcs = FALSE,
@@ -24,12 +27,12 @@ BNB.args.list <- list( categorization.type = "nodeEven",
                  ncategories = 4,
                  clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                  parallelize = TRUE, n.cores = 7,
-                 output.marginals = TRUE, 
-                 #bnlearning.args.list = list(distance = 18),
+                 output.marginals = TRUE, # FORCED IN CV
+                 bnlearning.args.list = list(distance = 3),
                  #bnlearning.args.list = list(test = "mc-mi"),
                  param.learning.method = "bayes",
                  two.step = FALSE,
-                 return.first = TRUE,
+                 return.first = TRUE, # FORCED IN CV
                  bnlearning.algorithm2 = "hc.local",
                  bnlearning.args.list2 = list(distance = 3)
                 )
@@ -47,8 +50,4 @@ local$Data[ local$Data >= 1 ] <-  1
 BNB.args.list[["global"]] <- global
 BNB.args.list[[ "local" ]] <- local
 
-results <- kfold.BN(year.folds.list = year.folds.list, BNB.args.list = BNB.args.list, plot.aucS = plot.aucS, plot.MI = plot.MI)
-
-dev.new()
-plot(results[ ,1]$MI$real[1,], results[ ,1]$MI$real[2,])
-points(results[ ,1]$MI$predicted[1,], results[ ,1]$MI$predicted[2,], col = "red")
+results <- kfold.BN(year.folds.list = year.folds.list, mi.threshold = mi.threshold, BNB.args.list = BNB.args.list, plot.aucS = plot.aucS, plot.MI = plot.MI)
