@@ -27,7 +27,6 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
   cutp <- which(py >= threshold)[length(which(py >= threshold))]
   bias <- px[cutp] - px[cutr]
   
-  print(bias)
   if (plot_) {
     plot(px, py, col = "red",  xlab = "Distance", ylab = "Mutual Information")
     points(rx, ry)
