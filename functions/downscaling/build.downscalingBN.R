@@ -7,8 +7,6 @@ source("functions/local.bnlearning/gs.local.R")
 source("functions/local.bnlearning/iamb.local.R")
 source("functions/local.bnlearning/fast.iamb.local.R")
 source("functions/local.bnlearning/inter.iamb.local.R")
-source("functions/local.bnlearning/mmpc.local.R")
-source("functions/local.bnlearning/si.hiton.pc.local.R")
 source("functions/local.bnlearning/mmhc.local.R")
 source("functions/local.bnlearning/rsmax2.local.R")
 
