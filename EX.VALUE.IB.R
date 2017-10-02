@@ -35,20 +35,21 @@ global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd
 DBN <- build.downscalingBN(local, global, categorization.type = "varsEven",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "gs", 
+                           bnlearning.algorithm = "mmhc.local", 
                            ncategories = 5,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                           parallelize = FALSE, n.cores = 7,
+                           parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
+                           bnlearning.args.list = list(test = "mc-mi", debug = TRUE, distance = 4),
                            #bnlearning.args.list = list(distance = 4, debug = TRUE),
                            param.learning.method = "bayes",
                            two.step = TRUE,
                            return.first = TRUE,
                            bnlearning.algorithm2 = "hc.local",
-                           bnlearning.args.list2 = list(distance = 3, debug = TRUE) 
+                           bnlearning.args.list2 = list(distance = 3, debug = FALSE) 
                            )
 plot.DBN( DBN$first, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)
+
 DBN <- DBN$last
 
 plot.DBN( DBN, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)

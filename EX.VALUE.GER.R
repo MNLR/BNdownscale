@@ -115,6 +115,7 @@ c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
 ###   Mutual Information
 ###
 
+dev.new()
 distance.bias(local, prediction, plot_ = TRUE)
 
 d <- MI.vs.distance(prediction.p)

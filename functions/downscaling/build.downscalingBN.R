@@ -8,7 +8,9 @@ source("functions/local.bnlearning/iamb.local.R")
 source("functions/local.bnlearning/fast.iamb.local.R")
 source("functions/local.bnlearning/inter.iamb.local.R")
 source("functions/local.bnlearning/mmpc.local.R")
-source("functions/local.bnlearning/si.hilton.pc.local.R")
+source("functions/local.bnlearning/si.hiton.pc.local.R")
+source("functions/local.bnlearning/mmhc.local.R")
+source("functions/local.bnlearning/rsmax2.local.R")
 
 build.downscalingBN <- function(local, global, categorization.type = "nodeSimple", 
                                 forbid.global.arcs = TRUE, forbid.local.arcs = FALSE,
@@ -26,12 +28,16 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
                                 ) {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
-  #              Can be categorical or continuous. See mode
+  #              Can be categorical or continuous. See categorization.type for global categorization.
   #              2 coordinate postions are expected. 
-  #              NaNs are not expected when categorization, using quantiles, is to be done, modes *0 and *2
-  # local    predictands. Expects categorical data. 
-  #              NaNs will be processed
-  # bnlearning.algorithm    Supports all the functions from bnlearn and their .local counterparts. Check their corresponding parameters.
+  #              NaNs are not expected when categorization, expect malfunction if global dataset contains NaN values. 
+  # local    predictands. Expects categorical data. NaNs will be processed
+  # bnlearning.algorithm    Supports all the score-based, constraint-based  and hybrid bayesian network algorithms from bnlearn and their *.local counterparts. 
+  #                           Check their corresponding parameters, ?bnlearn. DOES NOT support local discovery algorithms, expect malfuncion if used.
+  #                           List of supported algorithms:
+  #                             "hc", "tabu" (score-based), "gs", "iamb", "fast.iamb", "inter.iamb" (constraint-based),  "mmhc", "rsmax2" (hybrid).
+  #                             Use "*.local" to perform local learning, e.g. "hc.local", "fast.iamb.local"... 
+  #                               Do not forget to set the distance argument in bnlearning.args.list for *.local learning.
   # bnlearning.args.list    List of arguments passed to bnlearning.algorithm, in particular distance argument if local learning is used.
   # categorization.type     "no"              Use if global data is already categorical.
   #                         "nodeClustering"  Clustering is performed for each node. 
@@ -41,6 +47,8 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
   #                         "nodeEven"        Categorization by quantile, per node.  
   #                         "varsEven"        Categorization by quantile, per variable and node.
   #                         "atmosphere"      Clustering is performed for all nodes at once condensing the atmosphere status. 
+  # forbid.global.arcs      Arcs between global nodes will be forbidden.
+  # forbid.local.arcs       Arcs between local nodes will be forbidden. Will be used in second step if two.step is set to TRUE
   # param.learning.method   Either "bayes" or "mle", passed to learn the parameters of the built network structure.
   # 
   # ncategories             Use for categorization.type = "nodeSimple", "varsSimple", "nodeEven", "varsEven", number of categories for each node/variable.
@@ -49,10 +57,20 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
   #                           Check flexclust::kcca() function, expects a list of arguments, e.g. list(k = 12, family = kccaFamily("kmeans"))
   #                           
   # output.marginals        Compute and output Marginal Probability distribution Tables 
-  # two.step                Learn first local bayesian network, then inject global nodes 
-  # return.first            Will return a list with the two bayesian networks.
+  # two.step                Learn first local bayesian network, then inject global nodes. 
+  #                           bnlearning.algorithm and bnlearning.args.list will be used for the first step.
+  #                           bnlearning.algorithm2 and bnlearning.args.list2 will be used for the second step (global injection)
+  # return.first            Will return a list with the two bayesian networks, $first and $last if two.step is set to TRUE. 
+  #                           Otherwise the single last adjusted Bayesian network will be returned.
   # bnlearning.algorithm2   Same as bnlearning.algorithm for the global injection process, ignored if two.step is set to FALSE
   # bnlearning.args.list2   Same as bnlearning.args.list for the global injection process, ignored if two.step is set to FALSE
+  # parallelize             Set to TRUE to make use of the parallel package. 
+  #                           Should improve computation times a lot if
+  #                               1) Clustering is performed, and/or
+  #                               2) A constraint-based family algorithm is used
+  # n.cores                 Number of threads to be used, will use detectCores()-1 if not set.
+  # cluster.type            Either "PSOCK" or "FORK". Use the former under Windows systems, refer to parallel package.
+
 
   if (!(is.character(bnlearning.algorithm))) { stop("Input algorithm name as character") }
   
@@ -109,7 +127,7 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
   
   print("Building Bayesian Network...")
   alg <- strsplit(bnlearning.algorithm, split = ".", fixed = TRUE)[[1]][1]
-  if ( (alg != "hc")  & (alg != "tabu") ) { 
+  if ( (alg == "gs") | (alg == "iamb") | (alg == "fast")  | (alg == "inter") | (alg == "inter") ) { # Constraint based, parallelizable
     cl <- NULL
     if ( parallelize ) { # constraint-based algorithms allow parallelization
       if ( is.null(n.cores) ){
@@ -122,7 +140,8 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
     bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )
     if (!(is.null(cl))) {stopCluster(cl)}
   }
-  else { bn <-  do.call(bnlearning.algorithm, bnlearning.args.list) }
+  else if ( (alg == "mmhc") | (alg == "rsmax2") ) { bn <- cextend( do.call(bnlearning.algorithm, bnlearning.args.list) )} # Non parallelizable, need cextend arc direction
+  else { bn <-  do.call(bnlearning.algorithm, bnlearning.args.list) } # Non parallelizable, already DAG (directed)
   if (!two.step){ bn.fit <- bn.fit(bn, data = data[[1]], method = param.learning.method) }
   print("Done.")
   
