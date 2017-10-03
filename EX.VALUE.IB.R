@@ -35,12 +35,12 @@ global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd
 DBN <- build.downscalingBN(local, global, categorization.type = "varsEven",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "mmhc.local", 
+                           bnlearning.algorithm = "gs", 
                            ncategories = 5,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           bnlearning.args.list = list(test = "mc-mi", debug = TRUE, distance = 4),
+                           bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
                            #bnlearning.args.list = list(distance = 4, debug = TRUE),
                            param.learning.method = "bayes",
                            two.step = TRUE,
@@ -98,9 +98,9 @@ c.table.rates(ct1, "all")
 ###
 ###
 
-
+attr(real$Data, 'dimensions') <- c("time", "station")
 dev.new()
-distance.bias(real, prediction, season = "DJF", dimFix = TRUE, plot_ = TRUE)
+distance.bias(real, prediction, season = "DJF",dimFix = TRUE, plot_ = TRUE)
 
 
 ###

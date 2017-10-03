@@ -65,7 +65,10 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                   plot.curves = plot.aucS, points = 100)
   
   # Frecuency ratio:
-  FRatio <- (table(prediction)["1"])/(table(testD$Data)["1"])
+  realRatio <- table(testD$Data)["1"]/sum(table(testD$Data))
+  predRatio <- table(prediction)["1"]/sum(table(prediction))
+  
+  FRatio <- predRatio/realRatio
   #
   
   # MI vs Distance test
