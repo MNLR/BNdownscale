@@ -26,7 +26,7 @@ BNB.args.list <- list( categorization.type = "nodeEven",
                  bnlearning.algorithm = "hc",
                  ncategories = 4,
                  clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                 parallelize = TRUE, n.cores = 7,
+                 parallelize = TRUE, n.cores = 7, 
                  output.marginals = TRUE, # FORCED IN CV
                  bnlearning.args.list = list(distance = 3),
                  #bnlearning.args.list = list(test = "mc-mi"),

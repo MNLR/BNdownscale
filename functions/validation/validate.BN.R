@@ -42,7 +42,7 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                              bnlearning.algorithm = bnlearning.algorithm, 
                              ncategories = ncategories,
                              clustering.args.list = clustering.args.list, 
-                             parallelize = parallelize, n.cores = n.cores,
+                             parallelize = parallelize, n.cores = n.cores, cluster.type = cluster.type,
                              output.marginals = TRUE, # FORCED 
                              bnlearning.args.list = bnlearning.args.list,
                              param.learning.method = param.learning.method,
@@ -53,7 +53,7 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                         )
   
   SC <- score( DBN$BN, DBN$training.data )
-  downscaled <- downscale.BN(DBN, testG, parallelize = TRUE,  n.cores = 7) 
+  downscaled <- downscale.BN(DBN, testG, parallelize = parallelize, n.cores = n.cores, cluster.type = cluster.type) 
   MPT <-DBN$marginals
   P_1 <- MPT["1", ]
   prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
