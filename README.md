@@ -10,14 +10,14 @@ They are specifically prepared to work with the climate data set structures prov
 
 ***
 
-The folder contains two examples: EX.VALUE.GER.R and EX.VALUE.IB.R, which perform downscaling over Germany and the Iberian penynsula, respectivelly. Aditional examples showing different combinations of the options available can be found in DBN.examples.R. The folder functions contains all the functions implemented, in particular the two above mentioned, divided into the subfolders
+The folder contains two examples: EX.VALUE.GER.R and EX.VALUE.IB.R, which perform downscaling over Germany and the Iberian penynsula, respectivelly. Aditional examples showing different combinations of the options available can be found in DBN.examples.R. The folder **functions** contains all the functions implemented, in particular the two above mentioned, divided into the subfolders
 
 
-* downscaling folder contains the functions that perform the two phases (train and predict) of the downscaling process.
-* local.bnlearning contain wrappers for the local learning algorithms, which
-* validation folder contains different functions to compute scores and perform cross-validation to the model.
-* plot.graph.functions contains several functions to plot downscaling bayesian networks.
-* generalaux contains functions to process climate datasets.
+* downscaling: Contains the functions that perform the two phases (train and predict) of the downscaling process.
+* local.bnlearning: Contains wrappers for the local learning algorithms, which
+* validation: Contains different functions to compute scores and perform cross-validation to the model.
+* plot.graph.functions: Contains several functions to plot downscaling bayesian networks.
+* generalaux: Contains functions to process climate datasets.
 
-
+**exampleplots** has several bayesian network and scores plots. **data** contains two example datasets obtained using [`loadeR` bundle](https://github.com/SantanderMetGroup/loadeR), and **CV** has several reproducible cross-validation scripts and results.
 

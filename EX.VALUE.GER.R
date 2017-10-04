@@ -54,7 +54,7 @@ real <- subsetGrid(local,  years = c(1979))
 DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "iamb", 
+                           bnlearning.algorithm = "gs", 
                            ncategories = 4,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
