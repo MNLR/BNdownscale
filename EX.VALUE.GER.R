@@ -54,13 +54,13 @@ real <- subsetGrid(local,  years = c(1979))
 DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "gs", 
+                           bnlearning.algorithm = "iamb", 
                            ncategories = 4,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
                            #bnlearning.args.list = list(distance = 3),
-                           bnlearning.args.list = list(test = "mi-sh"),
+                           bnlearning.args.list = list(test = "mi", alpha = 0.1, debug = TRUE),
                            param.learning.method = "bayes",
                            two.step = TRUE,
                            return.first = TRUE,
@@ -125,7 +125,7 @@ distance.bias(local, REA$Data, plot_ = TRUE, colpred = "blue", show.title = FALS
 ## Bias against prediction
 
 dev.new()
-distance.bias(local, prediction, plot_ = TRUE, colpred = "red")
+distance.bias(real, prediction, plot_ = TRUE, colpred = "red")
 rea<-MI.vs.distance(REA)
 points(rea$dist, rea$mi, col = "blue")
 
