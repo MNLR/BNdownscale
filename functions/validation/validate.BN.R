@@ -51,6 +51,7 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                              bnlearning.algorithm2 = bnlearning.algorithm2,
                              bnlearning.args.list2 = bnlearning.args.list2
                         )
+  plot.DBN(DBN)
   
   SC <- score( DBN$BN, DBN$training.data )
   downscaled <- downscale.BN(DBN, testG, parallelize = parallelize, n.cores = n.cores, cluster.type = cluster.type) 

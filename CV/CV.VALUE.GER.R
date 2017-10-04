@@ -15,26 +15,25 @@ year.folds.list <- list(seq(1979, 1984),
                         seq(1991, 1996), 
                         seq(1997, 2002), 
                         seq(2003, 2008))
-year.folds.list <- list(c(1979), 
-                        c(1985))
-plot.aucS <- FALSE
+
+plot.aucS <- TRUE
 plot.MI <- TRUE
 mi.threshold <- 0.3
-BNB.args.list <- list( categorization.type = "nodeEven",
-                 forbid.global.arcs = TRUE,
+BNB.args.list <- list( categorization.type = "nodeSimple",
+                 forbid.global.arcs = FALSE,
                  forbid.local.arcs = FALSE,
-                 bnlearning.algorithm = "hc",
-                 ncategories = 4,
+                 bnlearning.algorithm = "gs",
+                 ncategories = 5,
                  clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                  parallelize = TRUE, n.cores = 7, 
                  output.marginals = TRUE, # FORCED IN CV
-                 bnlearning.args.list = list(distance = 3),
-                 #bnlearning.args.list = list(test = "mc-mi"),
+                 #bnlearning.args.list = list(distance = 3),
+                 bnlearning.args.list = list(test = "mi"),
                  param.learning.method = "bayes",
-                 two.step = FALSE,
+                 two.step = TRUE,
                  return.first = TRUE, # FORCED IN CV
                  bnlearning.algorithm2 = "hc.local",
-                 bnlearning.args.list2 = list(distance = 3)
+                 bnlearning.args.list2 = list(distance = 2.5)
                 )
 
 ###
@@ -51,3 +50,6 @@ BNB.args.list[["global"]] <- global
 BNB.args.list[[ "local" ]] <- local
 
 results <- kfold.BN(year.folds.list = year.folds.list, mi.threshold = mi.threshold, BNB.args.list = BNB.args.list, plot.aucS = plot.aucS, plot.MI = plot.MI)
+
+
+# 

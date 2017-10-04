@@ -54,21 +54,23 @@ real <- subsetGrid(local,  years = c(1979))
 DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "hc", 
+                           bnlearning.algorithm = "gs", 
                            ncategories = 4,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
                            #bnlearning.args.list = list(distance = 3),
-                           #bnlearning.args.list = list(test = "mc-mi"),
+                           bnlearning.args.list = list(test = "mi-sh"),
                            param.learning.method = "bayes",
-                           two.step = FALSE,
+                           two.step = TRUE,
                            return.first = TRUE,
-                           bnlearning.algorithm2 = "hc.local",
-                           bnlearning.args.list2 = list(distance = 3)
+                           bnlearning.algorithm2 = "hc"
+                           #bnlearning.args.list2 = list(distance = 2.5)
                            )
 
-plot.DBN( DBN, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
+plot.DBN( DBN$first, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
+plot.DBN( DBN$last, dev=TRUE , edge.arrow.size = 0.25, node.size = 0)
+DBN <- DBN$last
 score(DBN$BN, DBN$training.data )
 
 test <- global
@@ -115,35 +117,19 @@ c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
 ###   Mutual Information
 ###
 
-dev.new()
-distance.bias(local, prediction, plot_ = TRUE)
-
-d <- MI.vs.distance(prediction.p)
-a <- MI.vs.distance(local)
+## Bias against rea
 
 dev.new()
-plot(a$dist, a$mi, col="black")
-lines(aloes, col = "black")
-points(d$dist, d$mi, col = "blue")
-lines(dloes, col = "blue")
+distance.bias(local, REA$Data, plot_ = TRUE, colpred = "blue", show.title = FALSE)
 
-# 
-a <- MI.vs.distance(local)
-b <- MI.vs.distance(REA)
-c <- MI.vs.distance(oPred)
-mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
-mial <- lm( y ~ x , mia )
-mib <- data.frame(y = b[ 2, ], x = b[ 1, ])
-mibl <- lm( y ~ x , mib )
-
+## Bias against prediction
 
 dev.new()
-plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
-points(b[1, ], b[2, ], col = "blue")
-#points(c[1, ], c[2, ], col = "green")
-points(d[1, ], d[2, ], col = "red")
+distance.bias(local, prediction, plot_ = TRUE, colpred = "red")
+rea<-MI.vs.distance(REA)
+points(rea$dist, rea$mi, col = "blue")
 
-abline(mial)
-abline(mibl, col = "blue")
-abline(midl, col = "red")
-#legend(c("Observations", ))
+## Bias prediction vs REA
+dev.new()
+distance.bias(REA, prediction, plot_ = TRUE, 
+              colpred = "red", colreal = "blue", legend = c("GCM prediction", "Predicted") )
