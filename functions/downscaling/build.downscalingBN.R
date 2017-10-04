@@ -22,7 +22,7 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
                                 two.step = FALSE,
                                 return.first = FALSE,
                                 bnlearning.algorithm2 = NULL,
-                                bnlearning.args.list2 = NULL
+                                bnlearning.args.list2 = list()
                                 ) {
   # global   predictors, expects: a list of predictor datasets, a Multigrid from makeMultiGrid() or a single dataset
   #              It  is asumed that the data is consistent if a list is provided, and only the positions of first element will be used.
@@ -148,8 +148,7 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
     whitelist <- apply( bn$arcs, MARGIN = 2,function(x) paste0("D.", x) ) 
 
     if (is.null(bnlearning.algorithm2) ){ bnlearning.algorithm2 <- bnlearning.algorithm} 
-    if (is.null( bnlearning.args.list2 ) ){ bnlearning.args.list2 <- bnlearning.args.list}
-    
+
     if ( is.null(bnlearning.args.list2$whitelist) ){ bnlearning.args.list2[["whitelist"]] <- whitelist }
     else{ rbind(whitelist, bnlearning.args.list2$whitelist) }
 
