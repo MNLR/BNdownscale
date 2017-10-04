@@ -107,26 +107,6 @@ distance.bias(real, prediction, season = "DJF",dimFix = TRUE, plot_ = TRUE)
 ###
 ###
 
-a <- MI.vs.distance(local, season = "DJF")
-mia <- data.frame(y = a[ 2, ], x = a[ 1, ])
-mial <- lm( y ~ x , mia )
-
 dev.new()
-plot(a[1, ], a[ 2, ], xlab = "Distance", ylab = "Mutual Information")
-abline(mial)
+a <- MI.vs.distance(local, season = "DJF")
 
-# Predictions:
-
-prediction.p <- real
-prediction.p$Data <- prediction
-attr(prediction.p$Data, 'dim') <- attributes(real$Data)$dim
-attr(prediction.p$Data, 'dimensions') <- attributes(real$Data)$dimensions
-attr(prediction.p$Data, 'season') <- attributes(real$Data)$season
-
-
-c <- MI.vs.distance(prediction.p)
-mic <- data.frame(y = c[ 2, ], x = c[ 1, ])
-micl <- lm( y ~ x , mic )
-
-plot(c[1, ], c[ 2, ], col =  "red")
-abline(micl, col = "red")
