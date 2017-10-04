@@ -8,8 +8,9 @@ source("functions/validation/c.table.rates.R")
 source("functions/validation/distance.bias.R")
 
 validate.BN <- function( year.fold, progress.count, progress.length, 
-                     local, global, plot.aucS, plot.MI, 
-                     mi.threshold = 0.3,
+                     local, global,
+                     plot_.DBN, plot.aucS, plot.MI,
+                     mi.threshold = 0.3, validate.perFold,
                      categorization.type = "nodeSimple", 
                      forbid.global.arcs = TRUE, forbid.local.arcs = FALSE,
                      ncategories = 3,
@@ -51,40 +52,42 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                              bnlearning.algorithm2 = bnlearning.algorithm2,
                              bnlearning.args.list2 = bnlearning.args.list2
                         )
-  plot.DBN(DBN)
-  
-  SC <- score( DBN$BN, DBN$training.data )
+  if (plot_.DBN){
+    plot.DBN(DBN)
+  }
   downscaled <- downscale.BN(DBN, testG, parallelize = parallelize, n.cores = n.cores, cluster.type = cluster.type) 
   MPT <-DBN$marginals
   P_1 <- MPT["1", ]
   prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
-  CT <- c.table(prediction, testD$Data)
-  RATES <- c.table.rates(CT, "all")
   
-  AUCS <- auc.DBN(downscaled = downscaled, 
+  if (!validate.perFold){ return( list(PT = downscaled, event = prediction) ) }
+  else{
+    CT <- c.table(prediction, testD$Data)
+    RATES <- c.table.rates(CT, "all")
+  
+    AUCS <- auc.DBN(downscaled = downscaled, 
                   realData = testD$Data, 
                   plot.curves = plot.aucS, points = 100)
   
-  # Frecuency ratio:
-  realRatio <- table(testD$Data)["1"]/sum(table(testD$Data))
-  predRatio <- table(prediction)["1"]/sum(table(prediction))
-  
-  FRatio <- predRatio/realRatio
-  #
-  
-  # MI vs Distance test
-  annual <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    # Frecuency ratio:
+    realRatio <- table(testD$Data)["1"]/sum(table(testD$Data))
+    predRatio <- table(prediction)["1"]/sum(table(prediction))
+    FRatio <- predRatio/realRatio
+
+    # MI vs Distance test
+    annual <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
                           only.bias = TRUE, season = "annual")
-  DJF <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    DJF <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
                                  only.bias = TRUE, season = "DJF")
-  MAM <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    MAM <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
                               only.bias = TRUE, season = "MAM")
-  JJA <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    JJA <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
                               only.bias = TRUE, season = "JJA")
-  SON <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    SON <- distance.bias(testD, prediction, plot_ = plot.MI, threshold = mi.threshold,
                               only.bias = TRUE, season = "SON")
   
-  d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
+    d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
   
-  return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
+    return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
+  }
 }

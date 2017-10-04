@@ -69,8 +69,9 @@ downscale.BN <- function(downscale.BN, global,
     return(PT) 
   }
   else {
+    # Node re-ordering due to bnlearn disordering
     downscaled <- aperm(simplify2array( sapply(PT , simplify2array, simplify = FALSE) , higher = TRUE ) , c(3,1,2))
-    PT <- downscaled[,,match(predictands, colnames(downscaled[1,,]))] 
+    PT <- downscaled[,,match(predictands, colnames(downscaled[1,,]))]
     if ( prediction.type == "event" & ( !(is.null(downscale.BN$marginals)) | !(is.null(threshold.vector)) ) ){
       if (is.null(threshold.vector)){ threshold.vector  <- 1 - downscale.BN$marginals[event, ] }
       return( is.mostLikely(PT, event = event, threshold.vector =  threshold.vector) )

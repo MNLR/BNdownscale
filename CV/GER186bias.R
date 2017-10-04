@@ -22,22 +22,22 @@ plot.aucS <- TRUE
 plot.MI <- TRUE
 mi.threshold <- 0.3
 plot_.DBN <- TRUE
-BNB.args.list <- list( categorization.type = "nodeSimple",
-                 forbid.global.arcs = TRUE,
-                 forbid.local.arcs = FALSE,
-                 bnlearning.algorithm = "hc",
-                 ncategories = 5,
-                 clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                 parallelize = TRUE, n.cores = 7, 
-                 output.marginals = TRUE, # FORCED IN CV
-                 #bnlearning.args.list = list(distance = 3),
-                 #bnlearning.args.list = list(test = "mi"),
-                 param.learning.method = "bayes",
-                 two.step = FALSE,
-                 return.first = TRUE, # FORCED IN CV
-                 bnlearning.algorithm2 = "hc"
-                 #bnlearning.args.list2 = list(distance = 2.5)
-                )
+BNB.args.list <- list(categorization.type = "nodeSimple",
+        forbid.global.arcs = TRUE,
+        forbid.local.arcs = FALSE,
+        bnlearning.algorithm = "gs", 
+        ncategories = 4,
+        clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
+        parallelize = TRUE, n.cores = 7,
+        output.marginals = TRUE, 
+        #bnlearning.args.list = list(distance = 3),
+        bnlearning.args.list = list(test = "mi-sh"),
+        param.learning.method = "bayes",
+        two.step = TRUE,
+        return.first = TRUE,
+        bnlearning.algorithm2 = "hc"
+        #bnlearning.args.list2 = list(distance = 2.5)
+      )
 
 ###
 ### DATA

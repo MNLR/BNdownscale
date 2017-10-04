@@ -10,12 +10,14 @@ library(sfsmisc)
 source("functions/validation/kfold.BN.R")
 
 # FOLDS AND ARG LIST
-year.folds.list <- list(seq(1983, 1984), 
-                        seq(1985, 1990), 
-                        seq(1991, 1996), 
+year.folds.list <- list(seq(1983, 1986), 
+                        seq(1987, 1991), 
+                        seq(1992, 1996), 
                         seq(1997, 2002))
-plot.aucS <- FALSE
-plot.MI <- FALSE
+plot.aucS <- TRUE
+plot.MI <- TRUE
+mi.threshold <- 0.3
+plot_.DBN <- TRUE
 BNB.args.list <- list( categorization.type = "nodeEven",
                        forbid.global.arcs = TRUE,
                        forbid.local.arcs = FALSE,
@@ -49,4 +51,5 @@ BNB.args.list[["global"]] <- global
 BNB.args.list[["local"]] <- local
 
 
-resultsIB <- kfold.BN(year.folds.list = year.folds.list, BNB.args.list = BNB.args.list, plot.aucS = plot.aucS, plot.MI = plot.MI)
+resultsIB <- results <- kfold.BN(year.folds.list = year.folds.list, mi.threshold = mi.threshold, BNB.args.list = BNB.args.list, 
+                                 plot_.DBN = plot_.DBN, plot.aucS = plot.aucS, plot.MI = plot.MI)

@@ -30,7 +30,7 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
   if (plot_) {
     if (show.title){
       season <- paste(toupper(substr(season, 1, 1)), substr(season, 2, nchar(season)), sep="")
-      title <- paste0(paste0("Season: ",season )  ,paste0(". Years: ",paste(as.character(unique(getYearsAsINDEX(global))), collapse=",")))
+      title <- paste0("Season: ",season )
     } else {title <- NULL}
     if (show.subtitle){
       sub <- paste0("Bias: ", bias)
