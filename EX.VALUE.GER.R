@@ -52,20 +52,20 @@ test <- subsetGrid(global, years = c(1979))
 real <- subsetGrid(local,  years = c(1979))
 
 DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
-                           forbid.global.arcs = TRUE,
+                           forbid.global.arcs = FALSE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "gs", 
-                           ncategories = 4,
+                           bnlearning.algorithm = "iamb", 
+                           ncategories = 5,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
                            #bnlearning.args.list = list(distance = 3),
-                           bnlearning.args.list = list(test = "mi", alpha = 0.1, debug = TRUE),
+                           #bnlearning.args.list = list(test = "mi", alpha = 0.1, debug = TRUE),
                            param.learning.method = "bayes",
-                           two.step = TRUE,
+                           two.step = FALSE,
                            return.first = TRUE,
                            bnlearning.algorithm2 = "hc"
-                           #bnlearning.args.list2 = list(distance = 2.5)
+                           #bnlearning.args.list2 = list(distance = 2)
                            )
 
 plot.DBN( DBN$first, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)

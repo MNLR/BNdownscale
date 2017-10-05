@@ -77,9 +77,9 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
     Dpositions <- data[[2]]
   }
   else{
-    print("Categorizing data...")
     # CATEGORIZATION 
-    if (categorization.type != "no"){ 
+    if (categorization.type != "no"){
+      print("Categorizing data...")
       global.prc <- categorize.bn(global, type = categorization.type,
                                   ncategories = ncategories,
                                   clustering.args.list = clustering.args.list, 
@@ -89,6 +89,7 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
       clusterS <- global.prc$clusterS
       categorization.attributes <- global.prc$categorization.attributes
       Nglobals <- global.prc$Nglobals
+      print("Done.")
     }
 
     data <- preprocess(local, global, rm.na = TRUE, rm.na.mode = "observations")
@@ -107,7 +108,6 @@ build.downscalingBN <- function(local, global, categorization.type = "nodeSimple
       localNodeNames <- colnames(data[[1]][ , (Nglobals+1):NCOL(data[[1]]) ])
       bnlearning.args.list <- add.toBlacklist(localNodeNames, bnlearning.args.list)
     }
-    print("Done.")
   }
   # For local learning positions need to be inputed
   if ( substr(bnlearning.algorithm, nchar(bnlearning.algorithm)-5+1, nchar(bnlearning.algorithm)) == "local" ){
