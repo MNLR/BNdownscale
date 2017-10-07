@@ -71,7 +71,10 @@ validate.BN <- function( year.fold, progress.count, progress.length,
     AUCS <- auc.DBN(downscaled = downscaled, 
                   realData = testD$Data, 
                   plot.curves = plot.aucS, points = 100)
-  
+    AUCmin <- min(AUCS, na.rm = TRUE)
+    AUCmax <- max(AUCS, na.rm = TRUE)
+    AUCmean <- mean(AUCS,  na.rm = TRUE)
+    
     # Frecuency ratio:
     realRatio <- table(testD$Data)["1"]/sum(table(testD$Data))
     predRatio <- table(prediction)["1"]/sum(table(prediction))
@@ -91,6 +94,6 @@ validate.BN <- function( year.fold, progress.count, progress.length,
   
     d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
   
-    return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
+    return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, AUCmin = AUCmin, AUCmax = AUCmax, AUCmean = AUCmean, FRatio = FRatio, d.bias = d.bias) )
   }
 }

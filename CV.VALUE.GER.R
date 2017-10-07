@@ -1,3 +1,4 @@
+respath = "TESTCV"
 plot.aucS <- FALSE
 plot.MI <- TRUE
 mi.threshold <- 0.35
@@ -15,5 +16,5 @@ BNB.args.list <- list(categorization.type = "nodeSimple",
 
 source("VALUE.EXPERIMENT.R")
 VALUE.EXPERIMENT(BNB.args.list, print.results = print.results, plot.aucS = plot.aucS, plot.MI = plot.MI,
-                 mi.threshold = mi.threshold, plot_.DBN = plot_.DBN,
+                 mi.threshold = mi.threshold, plot_.DBN = plot_.DBN, respath = respath,
                  only.loes.third = only.loes.third, reference = reference)

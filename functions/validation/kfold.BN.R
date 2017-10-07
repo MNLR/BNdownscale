@@ -27,6 +27,9 @@ kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE,
     AUCS <- auc.DBN(downscaled = PT, 
                     realData = BNB.args.list$local$Data, 
                     plot.curves = plot.aucS, points = 100)
+    AUCmin <- min(AUCS, na.rm = TRUE)
+    AUCmax <- max(AUCS, na.rm = TRUE)
+    AUCmean <- mean(AUCS,  na.rm = TRUE)
     
     # Frecuency ratio:
     realRatio <- table(BNB.args.list$local$Data)["1"]/sum(table(BNB.args.list$local$Data))
@@ -47,7 +50,7 @@ kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE,
     
     d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
     
-    return( list(CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
+    return( list(CT = CT, RATES = RATES, AUCS = AUCS,  AUCmin = AUCmin, AUCmax = AUCmax, FRatio = FRatio, d.bias = d.bias) )
   }
   else{
     return(results)
