@@ -61,7 +61,7 @@ VALUE.EXPERIMENT <- function(BNB.args.list, respath = NULL, print.results = TRUE
       outname <- paste(outname, BNB.args.list$bnlearning.args.list2$test, sep = ".")
     }
   }
-  respath <- getwd()
+  if (is.null(respath)) {respath <- getwd()}
   outpath <- paste0(paste0(paste(respath, outname, sep = "/"), ".RData"))
   save(res, file=outpath) 
   print(paste0(paste0("Results saved in ",outpath), "."))
