@@ -14,7 +14,7 @@ source("functions/plot.graph.functions/plot.DBN.R")
 source("functions/downscaling/marginals.R")
 source("functions/validation/c.table.R")
 source("functions/validation/auc.DBN.R")
-source("functions/validation/MI.vs.distance.R")
+source("functions/validation/distance.bias.R")
 source("functions/downscaling/aux_functions/is.mostLikely.R")
 source("functions/validation/c.table.rates.R")
 
@@ -51,25 +51,26 @@ rates.REA
 test <- subsetGrid(global, years = c(1979))
 real <- subsetGrid(local,  years = c(1979))
 
-DBN <- build.downscalingBN(local, global, categorization.type = "nodeSimple",
-                           forbid.global.arcs = FALSE,
+DBN <- build.downscalingBN(local, global, categorization.type = "varsSimple",
+                           forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "iamb", 
-                           ncategories = 5,
+                           bnlearning.algorithm = "hc.local", 
+                           ncategories = 9,
                            clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           #bnlearning.args.list = list(distance = 3),
+                           bnlearning.args.list = list(distance = 3),
                            #bnlearning.args.list = list(test = "mi", alpha = 0.1, debug = TRUE),
                            param.learning.method = "bayes",
                            two.step = FALSE,
                            return.first = TRUE,
-                           bnlearning.algorithm2 = "hc"
-                           #bnlearning.args.list2 = list(distance = 2)
+                           bnlearning.algorithm2 = "hc.local",
+                           bnlearning.args.list2 = list(distance = 2)
                            )
 
 plot.DBN( DBN$first, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
-plot.DBN( DBN$last, dev=TRUE , edge.arrow.size = 0.25, node.size = 0)
+DBN <- DBN$last
+plot.DBN( DBN, dev=TRUE , edge.arrow.size = 0.25, node.size = 0)
 DBN <- DBN$last
 score(DBN$BN, DBN$training.data )
 
@@ -125,9 +126,7 @@ distance.bias(local, REA$Data, plot_ = TRUE, colpred = "blue", show.title = FALS
 ## Bias against prediction
 
 dev.new()
-distance.bias(real, prediction, plot_ = TRUE, colpred = "red")
-rea<-MI.vs.distance(REA)
-points(rea$dist, rea$mi, col = "blue")
+distance.bias(real, prediction, third = REA, plot_ = TRUE, colpred = "red" )
 
 ## Bias prediction vs REA
 dev.new()

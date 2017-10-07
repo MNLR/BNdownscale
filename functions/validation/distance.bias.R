@@ -1,8 +1,9 @@
 source("functions/validation/MI.vs.distance.R")
 
-distance.bias <- function(real, prediction, threshold = 0.3, season = "annual", 
+distance.bias <- function(real, prediction, third = NULL, only.loes.third = FALSE, threshold = 0.35, season = "annual", 
                           dimFix = FALSE, only.bias = TRUE, plot_ = FALSE, plot.only.loes = FALSE,
-                          colpred = "red", colreal = "black", show.legend = TRUE, legend = NULL, show.title = TRUE, show.subtitle = TRUE){
+                          colpred = "red", colreal = "black", colthird="blue", alpha_ = 0.25, lwd=5, cex =1.5,
+                          show.legend = TRUE, legend = NULL, show.title = TRUE, show.subtitle = TRUE){
   prediction.p <- real
   prediction.p$Data <- prediction
   
@@ -22,7 +23,14 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
   smf <- loess(mi ~ dist, D)
   px <- seq(min(D$dist, na.rm = TRUE), max(D$dist, na.rm = TRUE),length.out=10000)
   py <- predict(smf, px)
-
+  # THIRD
+  if (!is.null(third)){
+    third.mvd <- MI.vs.distance(third, season = c(season), dimFix = dimFix)
+    D <- data.frame(mi=unlist(third.mvd$mi), dist=unlist(third.mvd$dist))
+    smf <- loess(mi ~ dist, D)
+    tx <- seq(min(D$dist, na.rm = TRUE), max(D$dist, na.rm = TRUE),length.out=10000)
+    ty <- predict(smf, tx)
+  }
   cutr <-  which(ry >= threshold)[length(which(ry >= threshold))]
   cutp <- which(py >= threshold)[length(which(py >= threshold))]
   bias <- px[cutp] - px[cutr]
@@ -35,17 +43,27 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
     if (show.subtitle){
       sub <- paste0("Bias: ", bias)
     } else {sub <- NULL}
-    plot(px, py, col = colpred, main = title, sub = sub,
+    plot(px, py, col = colpred, type = 'l', lwd=lwd, main = title, sub = sub,
          xlab = "Distance (KM)", ylab = "Mutual Information" , 
          xlim = c(min(c(px,rx), na.rm = TRUE), max(c(px,rx), na.rm = TRUE) ),
          ylim = c(min(c(py,ry), na.rm = TRUE), max(c(py,ry), na.rm = TRUE) ))
-    points(rx, ry, col = colreal)
+    points(rx, ry, type = 'l', lwd=lwd, col = colreal)
+    if (!is.null(third)){
+      if (!only.loes.third){ points(tx, ty, type = 'l', lwd=lwd, col = colthird) }
+      points(third.mvd$dist, third.mvd$mi,  pch = 20, cex=cex, col = adjustcolor(colthird, alpha.f = alpha_))
+      if (show.legend){
+        if (is.null(legend)){ legend <- c("Observed", "Predicted", "GCM") }
+        legend("topright", fill = c(colreal, colpred, colthird), legend = legend)
+      }
+    }
+    else{
     if (show.legend){
       if (is.null(legend)){ legend <- c("Observed", "Predicted") }
       legend("topright", fill = c(colreal, colpred), legend = legend)
     }
-    points(real.mvd$dist, real.mvd$mi,  col = colreal)
-    points(predicted.mvd$dist, predicted.mvd$mi, col = colpred)
+    }
+    points(real.mvd$dist, real.mvd$mi,  type = 'p',  pch = 20, cex=cex, col = adjustcolor(colreal, alpha.f = alpha_) )
+    points(predicted.mvd$dist, predicted.mvd$mi, type = 'p', pch = 20, cex=cex,col = adjustcolor(colpred, alpha.f = alpha_))
     if (!plot.only.loes){
       abline(h = threshold , col = "green")
       abline(v = px[cutr],  col = colreal)
@@ -64,4 +82,3 @@ distance.bias <- function(real, prediction, threshold = 0.3, season = "annual",
                  bias = bias) )
   }
 }
-

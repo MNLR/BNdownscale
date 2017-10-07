@@ -35,7 +35,7 @@ validate.BN <- function( year.fold, progress.count, progress.length,
   trainG <- subsetGrid(global, years = train.years)  
   testD <- subsetGrid(local,  years = year.fold)
   testG <- subsetGrid(global,  years = year.fold)
-  
+  print("Training model...")
   DBN <- build.downscalingBN(local =  trainD, global =  trainG, 
                              categorization.type = categorization.type,
                              forbid.global.arcs = forbid.global.arcs,
@@ -55,10 +55,13 @@ validate.BN <- function( year.fold, progress.count, progress.length,
   if (plot_.DBN){
     plot.DBN(DBN)
   }
+  print("Done training model.")
+  print("Downscaling...")
   downscaled <- downscale.BN(DBN, testG, parallelize = parallelize, n.cores = n.cores, cluster.type = cluster.type) 
   MPT <-DBN$marginals
   P_1 <- MPT["1", ]
   prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
+  print("Done downscaling.")
   
   if (!validate.perFold){ return( list(PT = downscaled, event = prediction) ) }
   else{

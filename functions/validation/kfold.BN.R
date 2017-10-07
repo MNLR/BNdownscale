@@ -1,6 +1,8 @@
 source("functions/validation/validate.BN.R")
 
-kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE, plot_.DBN = TRUE, plot.aucS = FALSE, plot.MI = FALSE, mi.threshold = 0.3) {
+kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE, 
+                       plot_.DBN = TRUE, plot.aucS = FALSE, plot.MI = FALSE, mi.threshold = 0.3,
+                       reference = NULL, only.loes.third = TRUE) {
   # year.folds.list, list of vectors for the years.folds
   # season.folds.list, list of vectors for the season.folds, if any.
   BNB.args.list[["plot_.DBN"]] <- plot_.DBN
@@ -19,6 +21,9 @@ kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE,
     PT <- do.call("abind", c(PTS, along=1))
     prediction <- do.call("abind", c(eventS, along=1))
     
+    CT <- c.table(prediction, BNB.args.list$local$Data)
+    RATES <- c.table.rates(CT, "all")
+    
     AUCS <- auc.DBN(downscaled = PT, 
                     realData = BNB.args.list$local$Data, 
                     plot.curves = plot.aucS, points = 100)
@@ -29,20 +34,20 @@ kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE,
     FRatio <- predRatio/realRatio
     
     # MI vs Distance test
-    annual <- distance.bias(BNB.args.list$local, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    annual <- distance.bias(BNB.args.list$local, prediction, third = reference, only.loes.third = only.loes.third, plot_ = plot.MI, threshold = mi.threshold,
                             only.bias = TRUE, season = "annual")
-    DJF <- distance.bias(BNB.args.list$local, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    DJF <- distance.bias(BNB.args.list$local, prediction, third = reference, only.loes.third = only.loes.third, plot_ = plot.MI, threshold = mi.threshold,
                          only.bias = TRUE, season = "DJF")
-    MAM <- distance.bias(BNB.args.list$local, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    MAM <- distance.bias(BNB.args.list$local, prediction, third = reference, only.loes.third = only.loes.third, plot_ = plot.MI, threshold = mi.threshold,
                          only.bias = TRUE, season = "MAM")
-    JJA <- distance.bias(BNB.args.list$local, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    JJA <- distance.bias(BNB.args.list$local, prediction, third = reference, only.loes.third = only.loes.third, plot_ = plot.MI, threshold = mi.threshold,
                          only.bias = TRUE, season = "JJA")
-    SON <- distance.bias(BNB.args.list$local, prediction, plot_ = plot.MI, threshold = mi.threshold,
+    SON <- distance.bias(BNB.args.list$local, prediction, third = reference, only.loes.third = only.loes.third, plot_ = plot.MI, threshold = mi.threshold,
                          only.bias = TRUE, season = "SON")
     
     d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
     
-    return( list(AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
+    return( list(CT = CT, RATES = RATES, AUCS = AUCS, FRatio = FRatio, d.bias = d.bias) )
   }
   else{
     return(results)
