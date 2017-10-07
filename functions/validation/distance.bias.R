@@ -49,8 +49,8 @@ distance.bias <- function(real, prediction, third = NULL, only.loes.third = FALS
          ylim = c(min(c(py,ry), na.rm = TRUE), max(c(py,ry), na.rm = TRUE) ))
     points(rx, ry, type = 'l', lwd=lwd, col = colreal)
     if (!is.null(third)){
-      if (!only.loes.third){ points(tx, ty, type = 'l', lwd=lwd, col = colthird) }
-      points(third.mvd$dist, third.mvd$mi,  pch = 20, cex=cex, col = adjustcolor(colthird, alpha.f = alpha_))
+      if (!only.loes.third){ points(third.mvd$dist, third.mvd$mi,  pch = 20, cex=cex, col = adjustcolor(colthird, alpha.f = alpha_)) }
+      points(tx, ty, type = 'l', lwd=lwd, col = colthird)
       if (show.legend){
         if (is.null(legend)){ legend <- c("Observed", "Predicted", "GCM") }
         legend("topright", fill = c(colreal, colpred, colthird), legend = legend)
