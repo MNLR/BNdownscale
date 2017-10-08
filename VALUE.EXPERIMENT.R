@@ -1,7 +1,8 @@
 VALUE.EXPERIMENT <- function(BNB.args.list, respath = NULL, print.results = TRUE, 
                              plot.aucS = TRUE, plot.MI = TRUE,
                              mi.threshold = 0.35, plot_.DBN = TRUE,
-                             only.loes.third = TRUE, reference = TRUE){
+                             only.loes.third = TRUE, reference = TRUE,
+                             remove.res = TRUE){
   library(R.VALUE)
   library(bnlearn)
   library(gRain)
@@ -65,4 +66,5 @@ VALUE.EXPERIMENT <- function(BNB.args.list, respath = NULL, print.results = TRUE
   outpath <- paste0(paste0(paste(respath, outname, sep = "/"), ".RData"))
   save(res, file=outpath) 
   print(paste0(paste0("Results saved in ",outpath), "."))
+  if (remove.res){ remove('res') }
 }

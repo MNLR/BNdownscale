@@ -41,7 +41,7 @@ distance.bias <- function(real, prediction, third = NULL, only.loes.third = FALS
       title <- paste0("Season: ",season )
     } else {title <- NULL}
     if (show.subtitle){
-      sub <- paste0("Bias: ", bias)
+      sub <- paste0("Bias: ", round(bias, 1))
     } else {sub <- NULL}
     plot(px, py, col = colpred, type = 'l', lwd=lwd, main = title, sub = sub,
          xlab = "Distance (KM)", ylab = "Mutual Information" , 

@@ -93,7 +93,7 @@ validate.BN <- function( year.fold, progress.count, progress.length,
                               only.bias = TRUE, season = "SON")
   
     d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
-  
+    
     return( list(SC = SC, CT = CT, RATES = RATES, AUCS = AUCS, AUCmin = AUCmin, AUCmax = AUCmax, AUCmean = AUCmean, FRatio = FRatio, d.bias = d.bias) )
   }
 }

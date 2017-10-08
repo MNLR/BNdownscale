@@ -49,6 +49,7 @@ kfold.BN  <- function( year.folds.list, BNB.args.list, validate.perFold = FALSE,
                          only.bias = TRUE, season = "SON")
     
     d.bias <- list( annual = annual, DJF = DJF, MAM = MAM, JJA = JJA, SON = SON )
+    remove('downscaled', 'DBN', 'prediction')
     
     return( list(CT = CT, RATES = RATES, AUCS = AUCS,  AUCmin = AUCmin, AUCmax = AUCmax, FRatio = FRatio, d.bias = d.bias) )
   }

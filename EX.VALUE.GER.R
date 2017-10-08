@@ -121,7 +121,8 @@ c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
 ## Bias against rea
 
 dev.new()
-distance.bias(local, REA$Data, plot_ = TRUE, colpred = "blue", show.title = FALSE)
+distance.bias(local, REA$Data, plot_ = TRUE, colpred = "blue", 
+              legend = c("Observed", "GCM prediction"), show.title = FALSE)
 
 ## Bias against prediction
 
