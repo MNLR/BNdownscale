@@ -32,27 +32,25 @@ local$Data[ local$Data >= 1] <-  1
 
 global <- getTemporalIntersection(obs = local, prd = global, which.return = "prd")
 
-DBN <- build.downscalingBN(local, global, categorization.type = "varsEven",
+DBN <- build.downscalingBN(local, global, categorization.type = "varsClustering",
                            forbid.global.arcs = TRUE,
                            forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "gs", 
-                           ncategories = 5,
-                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
+                           bnlearning.algorithm = "hc", 
+                           #ncategories = 2,
+                           clustering.args.list = list(k = 4, family = kccaFamily("kmeans") ), 
                            parallelize = TRUE, n.cores = 7,
                            output.marginals = TRUE, 
-                           bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
+                           #bnlearning.args.list = list(test = "mc-mi", debug = TRUE),
                            #bnlearning.args.list = list(distance = 4, debug = TRUE),
                            param.learning.method = "bayes",
-                           two.step = TRUE,
+                           two.step = FALSE,
                            return.first = TRUE,
                            bnlearning.algorithm2 = "hc.local",
                            bnlearning.args.list2 = list(distance = 3, debug = FALSE) 
                            )
-plot.DBN( DBN$first, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)
 
-DBN <- DBN$last
-
-plot.DBN( DBN, dev=TRUE  , nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)
+#DBN <- DBN$last
+plot.DBN( DBN, dev=TRUE, nodes = c(5,9), edge.arrow.size = 0.25, node.size = 0)
 
 arc.strength(DBN$BN, DBN$training.data, criterion = "mi")
 
@@ -66,7 +64,7 @@ downscaled <- downscale.BN(DBN , test , parallelize = TRUE ,  n.cores = 7, predi
 MPT <- DBN$marginals
 P_1 <- MPT["1", ]
 
-prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
+prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = P_1)
 ct <- c.table(prediction, real$Data)
 ct
 c.table.rates(ct, "all")
@@ -88,7 +86,7 @@ c(mean(aucS), min(aucS), max(aucS))
 # 0.7998096 0.8553792
 # 0.8344511 0.7790472 0.8745241
 
-ratest <- 3
+ratest <- 1
 ct1 <- c.table(prediction[ , ratest], real$Data[ , ratest]) # First station AUC ~~ 0.89
 ct1
 c.table.rates(ct1, "all")
@@ -100,7 +98,7 @@ c.table.rates(ct1, "all")
 
 attr(real$Data, 'dimensions') <- c("time", "station")
 dev.new()
-distance.bias(real, prediction, season = "DJF",dimFix = TRUE, plot_ = TRUE)
+distance.bias(real, prediction, season = "DJF",dimFix = TRUE, plot_ = TRUE, show.subtitle = FALSE)
 
 
 ###
