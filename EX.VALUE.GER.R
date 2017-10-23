@@ -48,50 +48,48 @@ ct.REA
 rates.REA <- c.table.rates(ct.REA, "all")
 rates.REA
 
+( table(REA$Data)["1"]/sum(table(REA$Data)) )/(table(local$Data)["1"]/sum(table(local$Data)))
+
 test <- subsetGrid(global, years = c(1979))
 real <- subsetGrid(local,  years = c(1979))
 
-DBN <- build.downscalingBN(local, global, categorization.type = "varsSimple",
-                           forbid.global.arcs = TRUE,
-                           forbid.local.arcs = FALSE,
-                           bnlearning.algorithm = "hc.local", 
-                           ncategories = 9,
-                           clustering.args.list = list(k = 12, family = kccaFamily("kmeans") ), 
-                           parallelize = TRUE, n.cores = 7,
-                           output.marginals = TRUE, 
-                           bnlearning.args.list = list(distance = 3),
-                           #bnlearning.args.list = list(test = "mi", alpha = 0.1, debug = TRUE),
-                           param.learning.method = "bayes",
-                           two.step = FALSE,
-                           return.first = TRUE,
-                           bnlearning.algorithm2 = "hc.local",
-                           bnlearning.args.list2 = list(distance = 2)
-                           )
+DBN <- build.downscalingBN(local, global, categorization.type = "nodeClustering",
+                                               forbid.global.arcs = TRUE,
+                                               forbid.local.arcs = FALSE,
+                                               bnlearning.algorithm = "gs",
+                                               clustering.args.list = list(k = 12, family = kccaFamily("kmeans")),
+                                               #bnlearning.args.list = list(distance = 6),
+                                               #ncategories = 4, 
+                                               two.step = TRUE, 
+					                                     return.first = TRUE,
+                                               output.marginals = FALSE,
+                                               bnlearning.algorithm2 = "hc",
+                                               #bnlearning.args.list2 = list(distance = 2.5),
+                                               parallelize = TRUE, n.cores = 7)
+                           
 
-plot.DBN( DBN$first, dev=TRUE , edge.arrow.size = 0.50, node.size = 0)
+plot.DBN( DBN$first, dev=TRUE , edge.arrow.size = 0.25, node.size = 0)
 DBN <- DBN$last
 plot.DBN( DBN, dev=TRUE , edge.arrow.size = 0.25, node.size = 0)
-DBN <- DBN$last
-score(DBN$BN, DBN$training.data )
+
+bnlearn::score(DBN$BN, DBN$training.data )
 
 test <- global
 real <- local
 downscaled <- downscale.BN(DBN , test, parallelize = TRUE,  n.cores = 7) 
-#dprediction <- downscale.BN(DBN , test, prediction.type = "event", parallelize = TRUE,  n.cores = 7) 
+#dperdiction <- downscale.BN(DBN , test, prediction.type = "event", parallelize = TRUE,  n.cores = 7) 
 
 MPT <-DBN$marginals
 P_1 <- MPT["1", ]
 prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = 1 - P_1)
+prediction  <- is.mostLikely(downscaled, event = "1", threshold.vector = array(0.5, 53 ))
+
 ct <- c.table(prediction, real$Data)
 ct
 rates <- c.table.rates(ct, "all")
 rates
 
 
-###  mode 22, ncat 5, d10, AUC [1] 0.7809686 0.7059353 0.8138946
-###  mode 20, k 16, d10, AUC [1] 0.7745503 0.7003792 0.8081117
-###  mode 22, ncat 5, d3.5, AUC [1] 0.7872823 0.7211412 0.8178377
-###  mode 22, ncat 9, d3.5 AUC [1] 0.7960473 0.7272802 0.8287681
 
 ###
 #real <- local
@@ -102,8 +100,9 @@ aucS
 c(mean(aucS), min(aucS), max(aucS))
 
 ###
-### Against REA
+### Against REA and RAC
 ###
+
 est <- 46
 c.table(prediction[,est], real$Data[,est])
 c.table.rates( c.table(prediction[,est], real$Data[,est]), "all")
@@ -113,6 +112,7 @@ c.table.rates( c.table(REA$Data[,est], real$Data[,est]), "all")
 
 c.table(oPred$Data[,est], real$Data[,est])
 c.table.rates( c.table(oPred$Data[,est], real$Data[,est]), "all")
+
 ###
 ###
 ###   Mutual Information
